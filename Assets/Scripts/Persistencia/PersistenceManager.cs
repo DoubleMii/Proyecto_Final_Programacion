@@ -1,28 +1,21 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
 /// Manager central de persistencia. Singleton que vive entre escenas.
 /// Coordina el guardado/carga y expone los datos al resto del juego.
 /// Añadir a un GameObject vacío llamado "PersistenceManager" en la escena inicial.
-/// </summary>
 public class PersistenceManager : MonoBehaviour
 {
-    // ─────────────────────────────────────────
-    // SINGLETON
-    // ─────────────────────────────────────────
+  
     public static PersistenceManager Instance { get; private set; }
 
-    // ─────────────────────────────────────────
-    // DATOS EN MEMORIA
-    // ─────────────────────────────────────────
 
-    /// <summary>Datos actualmente cargados en memoria.</summary>
+    //Datos actualmente cargados en memoria.
     public GameData CurrentData { get; private set; }
 
-    // ─────────────────────────────────────────
+    
     // CONFIGURACIÓN INSPECTOR
-    // ─────────────────────────────────────────
+    
     [Header("Configuración")]
     [Tooltip("Slot de guardado activo (0, 1 o 2)")]
     [Range(0, 2)]
@@ -34,15 +27,15 @@ public class PersistenceManager : MonoBehaviour
     [Tooltip("Guardar al cambiar de escena")]
     public bool saveOnSceneChange = true;
 
-    // ─────────────────────────────────────────
+    
     // TIEMPO DE JUEGO
-    // ─────────────────────────────────────────
+    
     private float _sessionStartTime;
     private float _autoSaveTimer;
 
-    // ─────────────────────────────────────────
+    
     // AWAKE / SINGLETON SETUP
-    // ─────────────────────────────────────────
+    
     private void Awake()
     {
         // Patrón Singleton con DontDestroyOnLoad
@@ -64,9 +57,9 @@ public class PersistenceManager : MonoBehaviour
         Debug.Log("[PersistenceManager] Inicializado. Datos cargados del slot " + activeSlot);
     }
 
-    // ─────────────────────────────────────────
+    
     // UPDATE — AUTOSAVE Y TIEMPO DE JUEGO
-    // ─────────────────────────────────────────
+    
     private void Update()
     {
         // Acumular tiempo de sesión en los datos
@@ -85,9 +78,9 @@ public class PersistenceManager : MonoBehaviour
         }
     }
 
-    // ─────────────────────────────────────────
+    
     // GUARDAR
-    // ─────────────────────────────────────────
+   
 
     /// <summary>Guarda los datos actuales en el slot activo.</summary>
     public void Save()
@@ -109,11 +102,11 @@ public class PersistenceManager : MonoBehaviour
         SaveSystem.Save(CurrentData, slot);
     }
 
-    // ─────────────────────────────────────────
+    
     // CARGAR
-    // ─────────────────────────────────────────
+    
 
-    /// <summary>Carga datos desde el slot activo.</summary>
+    /// Carga datos desde el slot activo.
     public void Load()
     {
         GameData loaded = SaveSystem.Load(activeSlot);
@@ -131,7 +124,7 @@ public class PersistenceManager : MonoBehaviour
         }
     }
 
-    /// <summary>Carga desde un slot específico.</summary>
+    //Carga desde un slot específico.
     public void LoadFromSlot(int slot)
     {
         GameData loaded = SaveSystem.Load(slot);
@@ -146,11 +139,11 @@ public class PersistenceManager : MonoBehaviour
         }
     }
 
-    // ─────────────────────────────────────────
+    
     // NUEVA PARTIDA
-    // ─────────────────────────────────────────
+    
 
-    /// <summary>Reinicia los datos a valores por defecto (nueva partida).</summary>
+    /// Reinicia los datos a valores por defecto (nueva partida).
     public void NewGame()
     {
         CurrentData = new GameData();
@@ -162,14 +155,13 @@ public class PersistenceManager : MonoBehaviour
         Debug.Log("[PersistenceManager] Nueva partida iniciada.");
     }
 
-    // ─────────────────────────────────────────
+    
     // ACTUALIZAR POSICIÓN DEL JUGADOR
-    // ─────────────────────────────────────────
+    
 
-    /// <summary>
-    /// Llamar desde el script del jugador para actualizar su posición antes de guardar.
-    /// Ejemplo: PersistenceManager.Instance.UpdatePlayerPosition(transform);
-    /// </summary>
+    
+    // Llamar desde el script del jugador para actualizar su posición antes de guardar.
+    // Ejemplo: PersistenceManager.Instance.UpdatePlayerPosition(transform);
     public void UpdatePlayerPosition(Transform playerTransform)
     {
         if (CurrentData == null) return;
@@ -180,7 +172,7 @@ public class PersistenceManager : MonoBehaviour
         CurrentData.player.rotY = playerTransform.eulerAngles.y;
     }
 
-    /// <summary>Devuelve la posición guardada del jugador como Vector3.</summary>
+    //Devuelve la posición guardada del jugador como Vector3.
     public Vector3 GetPlayerPosition()
     {
         if (CurrentData == null) return Vector3.zero;
@@ -192,9 +184,9 @@ public class PersistenceManager : MonoBehaviour
         );
     }
 
-    // ─────────────────────────────────────────
+    
     // ACTUALIZAR VIDA
-    // ─────────────────────────────────────────
+    
 
     public void UpdatePlayerHealth(float current, float max)
     {
@@ -203,9 +195,9 @@ public class PersistenceManager : MonoBehaviour
         CurrentData.player.maxHealth = max;
     }
 
-    // ─────────────────────────────────────────
+   
     // INVENTARIO
-    // ─────────────────────────────────────────
+    
 
     public void AddItem(string itemName)
     {
@@ -224,10 +216,9 @@ public class PersistenceManager : MonoBehaviour
         return CurrentData?.player.inventory.Contains(itemName) ?? false;
     }
 
-    // ─────────────────────────────────────────
+    
     // ESTADÍSTICAS
-    // ─────────────────────────────────────────
-
+    
     public void RegisterKill()
     {
         if (CurrentData != null)
@@ -240,10 +231,9 @@ public class PersistenceManager : MonoBehaviour
             CurrentData.stats.deaths++;
     }
 
-    // ─────────────────────────────────────────
+    
     // AL SALIR
-    // ─────────────────────────────────────────
-    private void OnApplicationQuit()
+        private void OnApplicationQuit()
     {
         Save();
         Debug.Log("[PersistenceManager] Guardado automático al salir.");

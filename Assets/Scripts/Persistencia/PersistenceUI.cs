@@ -42,14 +42,14 @@ public class PersistenceUI : MonoBehaviour
 
         GUILayout.BeginArea(new Rect(10, 10, 280, 400));
 
-        // ── Título ──
+        // Título 
         GUI.color = Color.cyan;
         GUILayout.Label("═══ SISTEMA DE PERSISTENCIA ═══");
         GUI.color = Color.white;
 
         GUILayout.Space(5);
 
-        // ── Selector de slot ──
+        // Selector de slot 
         GUILayout.Label($"Slot activo: {PersistenceManager.Instance.activeSlot}");
         GUILayout.BeginHorizontal();
         for (int i = 0; i < 3; i++)
@@ -71,7 +71,7 @@ public class PersistenceUI : MonoBehaviour
 
         GUILayout.Space(8);
 
-        // ── Datos actuales ──
+        //  Datos actuales 
         GameData d = PersistenceManager.Instance.CurrentData;
         if (d != null)
         {
@@ -93,7 +93,7 @@ public class PersistenceUI : MonoBehaviour
 
         GUILayout.Space(5);
 
-        // ── Feedback ──
+        //  Feedback
         if (_feedbackTimer > 0f)
         {
             GUI.color = Color.green;

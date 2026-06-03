@@ -2,36 +2,36 @@ using System;
 using System.IO;
 using UnityEngine;
 
-/// <summary>
-/// Sistema de guardado y carga de datos mediante JSON.
-/// Clase estática — se usa directamente sin instanciar.
-/// Guarda los archivos en Application.persistentDataPath (funciona en build y editor).
-/// </summary>
+
+// Sistema de guardado y carga de datos mediante JSON.
+// Clase estática — se usa directamente sin instanciar.
+// Guarda los archivos en Application.persistentDataPath (funciona en build y editor).
+
 public static class SaveSystem
 {
     private const string FILE_PREFIX  = "save_slot_";
     private const string FILE_EXT     = ".json";
     private const int    MAX_SLOTS    = 3;
 
-    // ─────────────────────────────────────────
+    
     // RUTA DEL ARCHIVO
-    // ─────────────────────────────────────────
+    
 
-    /// <summary>Devuelve la ruta completa del archivo de guardado para un slot.</summary>
+    //Devuelve la ruta completa del archivo de guardado para un slot.
     public static string GetSavePath(int slot = 0)
     {
         slot = Mathf.Clamp(slot, 0, MAX_SLOTS - 1);
         return Path.Combine(Application.persistentDataPath, FILE_PREFIX + slot + FILE_EXT);
     }
 
-    // ─────────────────────────────────────────
+   
     // GUARDAR
-    // ─────────────────────────────────────────
+    
 
-    /// <summary>
-    /// Serializa GameData a JSON y lo escribe en disco.
-    /// Devuelve true si el guardado fue exitoso.
-    /// </summary>
+    
+    // Serializa GameData a JSON y lo escribe en disco.
+    // Devuelve true si el guardado fue exitoso.
+    
     public static bool Save(GameData data, int slot = 0)
     {
         try
@@ -56,14 +56,14 @@ public static class SaveSystem
         }
     }
 
-    // ─────────────────────────────────────────
+    
     // CARGAR
-    // ─────────────────────────────────────────
+    
 
-    /// <summary>
-    /// Lee el JSON del disco y devuelve un GameData deserializado.
-    /// Devuelve null si no existe el archivo o hay error.
-    /// </summary>
+    
+    //Lee el JSON del disco y devuelve un GameData deserializado.
+    // Devuelve null si no existe el archivo o hay error.
+    
     public static GameData Load(int slot = 0)
     {
         string path = GetSavePath(slot);
@@ -89,17 +89,17 @@ public static class SaveSystem
         }
     }
 
-    // ─────────────────────────────────────────
+    
     // UTILIDADES
-    // ─────────────────────────────────────────
+    
 
-    /// <summary>Comprueba si existe un archivo de guardado en el slot indicado.</summary>
+    //Comprueba si existe un archivo de guardado en el slot indicado.
     public static bool SaveExists(int slot = 0)
     {
         return File.Exists(GetSavePath(slot));
     }
 
-    /// <summary>Elimina el archivo de guardado de un slot.</summary>
+    //Elimina el archivo de guardado de un slot.
     public static bool DeleteSave(int slot = 0)
     {
         string path = GetSavePath(slot);
@@ -123,7 +123,7 @@ public static class SaveSystem
         }
     }
 
-    /// <summary>Devuelve cuántos slots tienen guardado activo.</summary>
+    //Devuelve cuántos slots tienen guardado activo.
     public static int GetActiveSaveCount()
     {
         int count = 0;

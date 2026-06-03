@@ -2,17 +2,14 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>
 /// Verifica la estabilidad del build en tiempo de ejecución.
 /// Detecta errores en consola, mide FPS y reporta el estado general.
 /// Cubre el criterio "Estabilidad del Build" (10%) de la práctica.
 /// Añadir al mismo GameObject que PersistenceManager.
-/// </summary>
 public class BuildStabilityChecker : MonoBehaviour
 {
-    // ─────────────────────────────────────────
+    
     // CONFIGURACIÓN INSPECTOR
-    // ─────────────────────────────────────────
     [Header("Monitoreo de FPS")]
     [Tooltip("FPS mínimo aceptable antes de lanzar advertencia")]
     public float minAcceptableFPS = 20f;
@@ -27,9 +24,9 @@ public class BuildStabilityChecker : MonoBehaviour
     [Tooltip("Mostrar FPS en consola periódicamente")]
     public bool logFPS = false;
 
-    // ─────────────────────────────────────────
+    
     // ESTADO INTERNO
-    // ─────────────────────────────────────────
+    
     private int   _errorCount      = 0;
     private int   _warningCount    = 0;
     private float _currentFPS      = 0f;
@@ -38,17 +35,17 @@ public class BuildStabilityChecker : MonoBehaviour
     private int   _frameCount      = 0;
     private bool  _isStable        = true;
 
-    // ─────────────────────────────────────────
+    
     // PROPIEDADES PÚBLICAS
-    // ─────────────────────────────────────────
+    
     public float CurrentFPS  => _currentFPS;
     public float LowestFPS   => _lowestFPS;
     public int   ErrorCount  => _errorCount;
     public bool  IsStable    => _isStable;
 
-    // ─────────────────────────────────────────
+    
     // INICIO
-    // ─────────────────────────────────────────
+    
     private void OnEnable()
     {
         Application.logMessageReceived += OnLogReceived;
@@ -67,9 +64,9 @@ public class BuildStabilityChecker : MonoBehaviour
             LogStabilityReport();
     }
 
-    // ─────────────────────────────────────────
+    
     // UPDATE — MEDICIÓN DE FPS
-    // ─────────────────────────────────────────
+    
     private void Update()
     {
         _frameCount++;
@@ -95,11 +92,11 @@ public class BuildStabilityChecker : MonoBehaviour
         }
     }
 
-    // ─────────────────────────────────────────
+    
     // CAPTURA DE LOGS
-    // ─────────────────────────────────────────
+    
 
-    /// <summary>Escucha todos los mensajes de consola en tiempo real.</summary>
+    //Escucha todos los mensajes de consola en tiempo real
     private void OnLogReceived(string condition, string stackTrace, LogType type)
     {
         if (type == LogType.Error || type == LogType.Exception)
@@ -115,19 +112,19 @@ public class BuildStabilityChecker : MonoBehaviour
         }
     }
 
-    // ─────────────────────────────────────────
+    
     // CAMBIO DE ESCENA
-    // ─────────────────────────────────────────
+    
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         Debug.Log($"[StabilityChecker] Escena cargada: '{scene.name}' — Errores acumulados: {_errorCount}");
     }
 
-    // ─────────────────────────────────────────
+    
     // REPORTE
-    // ─────────────────────────────────────────
+    
 
-    /// <summary>Imprime un resumen del estado de estabilidad en consola.</summary>
+    // Imprime un resumen del estado de estabilidad en consola
     public void LogStabilityReport()
     {
         string status = _isStable ? "ESTABLE ✓" : "INESTABLE ✗";
@@ -142,9 +139,7 @@ public class BuildStabilityChecker : MonoBehaviour
                   $"══════════════════════════════════════");
     }
 
-    /// <summary>
-    /// Resetea los contadores (útil al cambiar de nivel o en pruebas).
-    /// </summary>
+    // Resetea los contadores (útil al cambiar de nivel o en pruebas).
     public void ResetCounters()
     {
         _errorCount   = 0;

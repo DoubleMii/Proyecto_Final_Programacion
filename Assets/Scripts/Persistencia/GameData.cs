@@ -2,40 +2,38 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
+
 /// Contenedor principal de todos los datos persistentes del juego.
 /// Esta clase se serializa/deserializa a JSON mediante SaveSystem.
 /// No hereda de MonoBehaviour — es un objeto de datos puro.
-/// </summary>
+
 [Serializable]
 public class GameData
 {
-    // ─────────────────────────────────────────
+
     // JUGADOR
-    // ─────────────────────────────────────────
+    
     public PlayerData player;
 
-    // ─────────────────────────────────────────
+    
     // ESTADÍSTICAS
-    // ─────────────────────────────────────────
+    
     public StatsData stats;
 
-    // ─────────────────────────────────────────
+    
     // CONFIGURACIÓN
-    // ─────────────────────────────────────────
+    
     public SettingsData settings;
 
-    // ─────────────────────────────────────────
+    
     // METADATOS DEL GUARDADO
-    // ─────────────────────────────────────────
+    
     public string saveTimestamp;   // Fecha y hora del guardado
     public string gameVersion;     // Versión del juego al guardar
     public int    saveSlot;        // Slot de guardado (0, 1, 2...)
 
-    /// <summary>
-    /// Constructor: inicializa todos los sub-objetos con valores por defecto.
-    /// Se llama cuando se crea una partida nueva.
-    /// </summary>
+    // Constructor: inicializa todos los sub-objetos con valores por defecto.
+    // Se llama cuando se crea una partida nueva.
     public GameData()
     {
         player   = new PlayerData();
@@ -48,9 +46,9 @@ public class GameData
     }
 }
 
-// ══════════════════════════════════════════════════════════
+
 // DATOS DEL JUGADOR
-// ══════════════════════════════════════════════════════════
+
 [Serializable]
 public class PlayerData
 {
@@ -115,9 +113,9 @@ public class PlayerData
     }
 }
 
-// ══════════════════════════════════════════════════════════
+
 // ESTADÍSTICAS DE PARTIDA
-// ══════════════════════════════════════════════════════════
+
 [Serializable]
 public class StatsData
 {
@@ -137,9 +135,9 @@ public class StatsData
     }
 }
 
-// ══════════════════════════════════════════════════════════
+
 // CONFIGURACIÓN DEL JUGADOR
-// ══════════════════════════════════════════════════════════
+
 [Serializable]
 public class SettingsData
 {

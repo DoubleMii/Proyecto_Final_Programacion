@@ -1,11 +1,9 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-/// <summary>
-/// Componente que va en el GameObject del jugador.
-/// Se encarga de cargar la posición/estado al iniciar
-/// y de actualizar los datos antes de cada guardado.
-/// </summary>
+// Componente que va en el GameObject del jugador.
+// Se encarga de cargar la posición/estado al iniciar
+// y de actualizar los datos antes de cada guardado.
 [RequireComponent(typeof(CharacterController))]
 public class PlayerPersistence : MonoBehaviour, IDataPersistence
 {
@@ -13,9 +11,8 @@ public class PlayerPersistence : MonoBehaviour, IDataPersistence
     [Tooltip("Si true, al iniciar la escena el jugador se teletransporta a la posición guardada")]
     public bool loadPositionOnStart = true;
 
-    // ─────────────────────────────────────────
+    
     // VARIABLES SIMULADAS (reemplazar con las reales del juego)
-    // ─────────────────────────────────────────
     [Header("Estado del Jugador (demo)")]
     public float health     = 100f;
     public float maxHealth  = 100f;
@@ -26,9 +23,9 @@ public class PlayerPersistence : MonoBehaviour, IDataPersistence
 
     private CharacterController _cc;
 
-    // ─────────────────────────────────────────
+    
     // INICIO
-    // ─────────────────────────────────────────
+    
     private void Awake()
     {
         _cc = GetComponent<CharacterController>();
@@ -92,10 +89,9 @@ public class PlayerPersistence : MonoBehaviour, IDataPersistence
             SaveData(PersistenceManager.Instance.CurrentData);
     }
 
-    // ─────────────────────────────────────────
+    
     // ATAJOS PARA DEMO
-    // ─────────────────────────────────────────
-    private void Update()
+        private void Update()
     {
         if (Keyboard.current == null) return;
 
