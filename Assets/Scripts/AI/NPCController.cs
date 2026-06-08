@@ -5,6 +5,7 @@ public enum eEnemyState
 {
     Idle,
     Patrol,
+    LookingFor,
     Chase,
     Attack,
     Flee
@@ -36,6 +37,10 @@ public class NPCController : MonoBehaviour
     [SerializeField] private float _fieldOfView = 120f; //Ángulo de visión en grados para el raycast
     [Range(1f, 10f)]
     [SerializeField] private float _proximityRange = 3f; //Radio de detección por proximidad sin necesidad de visión directa
+    [Range(0.01f, 1f)]
+    [SerializeField] private float _minDetectDistance = 0.5f;
+    [Range(0f, 5f)]
+    [SerializeField] private float _timeToLook = 1f;
 
     private NavMeshAgent _agent;
     private Transform _player;
@@ -50,6 +55,7 @@ public class NPCController : MonoBehaviour
         _agent = GetComponent<NavMeshAgent>();
         _player = GameObject.FindGameObjectWithTag("Player").transform;
         _currentHealth = _enemyData.maxHealth;
+        _waitTimer = _enemyData.stopTime;
         _agent.autoTraverseOffMeshLink = true;
         //Iniciamos el agente y obtenemos referencias. autoTraverseOffMeshLink habilita saltos y escaleras automáticos
     }
@@ -95,6 +101,7 @@ public class NPCController : MonoBehaviour
         {
             case eEnemyState.Idle:    HandleIdle();   break;
             case eEnemyState.Patrol:  HandlePatrol(); break;
+            case eEnemyState.LookingFor:  HandleLookingFor(); break;
             case eEnemyState.Chase:   HandleChase();  break;
             case eEnemyState.Attack:  HandleAttack(); break;
             case eEnemyState.Flee:    HandleFlee();   break;
@@ -138,17 +145,40 @@ public class NPCController : MonoBehaviour
                 _isWaiting = false;
                 _currentWaypointIndex = (_currentWaypointIndex + 1) % _waypoints.Length;
                 _agent.SetDestination(_waypoints[_currentWaypointIndex].position);
+                _waitTimer = _enemyData.stopTime;
             }
             return;
         }
 
-        if (_waypoints.Length > 0 && !_agent.pathPending && _agent.remainingDistance < 0.5f)
+        if (_waypoints.Length > 0 && !_agent.pathPending && _agent.remainingDistance < _minDetectDistance)
         {
             _isWaiting = true;
             _waitTimer = _waypointWaitTime;
             _agent.isStopped = true;
         }
         //El Guard llega a un waypoint, espera X segundos, y luego va al siguiente en loop
+    }
+
+    private void HandleLookingFor()
+    {
+        float _currTime = _timeToLook;
+        _currTime -= Time.deltaTime;
+
+        _agent.isStopped = true;
+        _isWaiting = true;
+
+        transform.LookAt(_player);
+        if(_currTime <= 0f)
+        {
+            if (DetectPlayer())
+            {
+                ChangeState(eEnemyState.Chase);
+            }
+        }
+        else
+        {
+            ChangeState(eEnemyState.Patrol);
+        }
     }
 
     private void HandleChase()
