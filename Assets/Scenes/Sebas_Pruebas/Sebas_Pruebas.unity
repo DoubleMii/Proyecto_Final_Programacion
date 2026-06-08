@@ -391,6 +391,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1790214606176978610, guid: 3b0d47e9caacbeb4d83e19796f68570e, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 39.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1790214606176978610, guid: 3b0d47e9caacbeb4d83e19796f68570e, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 71.9
+      objectReference: {fileID: 0}
     - target: {fileID: 3366702272361968172, guid: 3b0d47e9caacbeb4d83e19796f68570e, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -452,6 +460,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Enemies
       objectReference: {fileID: 0}
+    - target: {fileID: 1352870082034539213, guid: 6f6486c330220f844a0f7704c6386ef2, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 43.1
+      objectReference: {fileID: 0}
     - target: {fileID: 3592081625077733032, guid: 6f6486c330220f844a0f7704c6386ef2, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -495,8 +507,64 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2263093494320628435, guid: 6f6486c330220f844a0f7704c6386ef2, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8321342372050757132}
+    - targetCorrespondingSourceObject: {fileID: 2263093494320628435, guid: 6f6486c330220f844a0f7704c6386ef2, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8321342372050757131}
   m_SourcePrefab: {fileID: 100100000, guid: 6f6486c330220f844a0f7704c6386ef2, type: 3}
+--- !u!1 &8321342372050757130 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2263093494320628435, guid: 6f6486c330220f844a0f7704c6386ef2, type: 3}
+  m_PrefabInstance: {fileID: 8321342372050757129}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &8321342372050757131
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8321342372050757130}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1deb12b44e4529347b2a50b781749f18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NPCController
+  _enemyData: {fileID: 11400000, guid: e44b631709204cb4e9dac37e02bab962, type: 2}
+  _enemyType: 0
+  _waypoints:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  _waypointWaitTime: 2
+  _detectionRange: 10
+  _fieldOfView: 10
+  _proximityRange: 3
+--- !u!114 &8321342372050757132
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8321342372050757130}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 267ebf6fceb69c14c85fdf57e173eb7f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NPC_Controller
+  _enemyData: {fileID: 11400000, guid: e44b631709204cb4e9dac37e02bab962, type: 2}
+  _enemyType: 0
+  _waypoints: []
+  _detectionRange: 10
+  _fieldOfView: 120
+  _proximityRange: 3
+  _agent: {fileID: 0}
+  _player: {fileID: 0}
+  _currentState: 0
+  _currentWaypointIndex: 0
+  _currentHealth: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
