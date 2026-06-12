@@ -41,7 +41,7 @@ AudioSource:
   m_GameObject: {fileID: 1271637197532318948}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: -1616166166887133149, guid: 40a89aa7d808e424e9d288fc8acd789b, type: 2}
+  OutputAudioMixerGroup: {fileID: -1616166166887133149, guid: f9ec9c8a5b78655479d892a95f1a4230, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
@@ -139,6 +139,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5430029619580910870}
   - component: {fileID: 2685816590495530597}
+  - component: {fileID: 3725219031716242052}
   m_Layer: 0
   m_Name: SoundManager
   m_TagString: Untagged
@@ -154,7 +155,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1466594684521982923}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -2.11494, y: -0.2306, z: -2.11494}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -177,10 +178,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AudioManager
   audioSource: {fileID: 3905366920110783947}
   sfxSource: {fileID: 3755215086179020079}
-  audioMixer: {fileID: 24100000, guid: 40a89aa7d808e424e9d288fc8acd789b, type: 2}
+  audioMixer: {fileID: 24100000, guid: f9ec9c8a5b78655479d892a95f1a4230, type: 2}
   musicSlider: {fileID: 0}
   masterSlider: {fileID: 0}
   sfxSlider: {fileID: 0}
+--- !u!114 &3725219031716242052
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1466594684521982923}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 265abafffbffe9741bec94ce439aa028, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AdaptiveMusic
+  _musicSource: {fileID: 0}
+  _stealthMusic: {fileID: 0}
+  _chaseMusic: {fileID: 0}
 --- !u!1 &4563310324888930050
 GameObject:
   m_ObjectHideFlags: 0
@@ -222,7 +238,7 @@ AudioSource:
   m_GameObject: {fileID: 4563310324888930050}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 6564363828201617558, guid: 40a89aa7d808e424e9d288fc8acd789b, type: 2}
+  OutputAudioMixerGroup: {fileID: 6564363828201617558, guid: f9ec9c8a5b78655479d892a95f1a4230, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 0

@@ -1,23 +1,54 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
-    //Referencias a los diferentes paneles del Canvas (Menú Principal, HUD, Pausa, etc.)
+    public GameObject pauseMenu;
+    public GameObject victoryMenu;
+    public GameObject hudPanel;
+    public Button btnContinuar;
+
+    private void OnEnable()
+    {
+        EventManager.OnVictory += ShowVictoryMenu;
+    }
+
+    private void OnDisable()
+    {
+        EventManager.OnVictory -= ShowVictoryMenu;
+    }
 
     private void Start()
     {
-        // Ocultar/Mostrar paneles según el estado inicial
+        if (pauseMenu != null) pauseMenu.SetActive(false);
+        if (victoryMenu != null) victoryMenu.SetActive(false);
+        if (hudPanel != null) hudPanel.SetActive(true);
+
+        if (btnContinuar != null)
+        {
+            btnContinuar.onClick.AddListener(ResumeGame);
+        }
     }
 
-    public void ShowPauseMenu()
+    private void Update()
     {
-        // Lógica para mostrar menú de pausa
+        if (GameManager.Instance == null) return;
+        
+        bool isPaused = GameManager.Instance.currentState == GameManager.GameState.Paused;
+        if (pauseMenu != null && pauseMenu.activeSelf != isPaused)
+        {
+            pauseMenu.SetActive(isPaused);
+        }
     }
 
-    public void UpdateHUD(float health, int gold)
+    private void ShowVictoryMenu()
     {
-        // Actualizar elementos visuales del HUD (barras de vida, textos)
+        if (hudPanel != null) hudPanel.SetActive(false);
+        if (victoryMenu != null) victoryMenu.SetActive(true);
     }
 
-    //Conectar botones del Canvas a las funciones del PersistenceManager
+    public void ResumeGame()
+    {
+        if (GameManager.Instance != null) GameManager.Instance.ResumeGame();
+    }
 }

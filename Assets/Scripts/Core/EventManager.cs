@@ -1,19 +1,23 @@
 using System;
-using UnityEngine;
 
 public static class EventManager
 {
-    // Ejemplos de eventos globales a los que otros scripts se pueden suscribir
     public static event Action OnPlayerDeath;
-    public static event Action<int> OnScoreUpdated;
+    public static event Action OnVictory;
+    public static event Action<bool> OnPlayerDetected;
 
     public static void TriggerPlayerDeath()
     {
         OnPlayerDeath?.Invoke();
     }
 
-    public static void TriggerScoreUpdate(int newScore)
+    public static void TriggerVictory()
     {
-        OnScoreUpdated?.Invoke(newScore);
+        OnVictory?.Invoke();
+    }
+
+    public static void TriggerPlayerDetected(bool isDetected)
+    {
+        OnPlayerDetected?.Invoke(isDetected);
     }
 }

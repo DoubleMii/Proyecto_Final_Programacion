@@ -91,6 +91,16 @@ public class NPCController : MonoBehaviour
 
     private void ChangeState(eEnemyState newState)
     {
+        if (_currentState != eEnemyState.Chase && newState == eEnemyState.Chase)
+        {
+            EventManager.TriggerPlayerDetected(true);
+            if (VFXManager.Instance != null) VFXManager.Instance.PlayAlert(transform.position + Vector3.up * 2f);
+        }
+        else if (_currentState == eEnemyState.Chase && newState != eEnemyState.Chase)
+        {
+            EventManager.TriggerPlayerDetected(false);
+        }
+
         _currentState = newState;
         //Cambiamos el estado actual de la FSM
     }
