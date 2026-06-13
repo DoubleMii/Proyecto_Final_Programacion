@@ -50,10 +50,22 @@ public class UIManager : MonoBehaviour
     {
         if (GameManager.Instance == null) return;
         
+        // Si el juego está en el menú de victoria, no alteramos el HUD desde aquí
+        if (GameManager.Instance.currentState == GameManager.GameState.Victory) return;
+
         bool isPaused = GameManager.Instance.currentState == GameManager.GameState.Paused;
+        
+        // Control del Menú de Pausa
         if (pauseMenu != null && pauseMenu.activeSelf != isPaused)
         {
             pauseMenu.SetActive(isPaused);
+        }
+
+        // MODIFICACIÓN: Control del HUD basándose en la pausa
+        // Si está pausado (!isPaused será false), el HUD se apaga. Si se despausa, se enciende.
+        if (hudPanel != null && hudPanel.activeSelf == isPaused)
+        {
+            hudPanel.SetActive(!isPaused);
         }
     }
 
@@ -61,6 +73,7 @@ public class UIManager : MonoBehaviour
     {
         if (hudPanel != null) hudPanel.SetActive(false);
         if (victoryMenu != null) victoryMenu.SetActive(true);
+        if (pauseMenu != null) pauseMenu.SetActive(false); // Por si acaso estaba abierto
     }
 
     public void ResumeGame()
