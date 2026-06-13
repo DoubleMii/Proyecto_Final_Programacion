@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class UIManager : MonoBehaviour
 {
@@ -7,6 +8,7 @@ public class UIManager : MonoBehaviour
     public GameObject victoryMenu;
     public GameObject hudPanel;
     public Button btnContinuar;
+    public Button btnReiniciar;
 
     private void OnEnable()
     {
@@ -31,10 +33,15 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
-        // Búsqueda recursiva que encuentra objetos aunque estén apagados
         if (pauseMenu == null) pauseMenu = FindChildRecursive(transform, "MenuPausa");
         if (victoryMenu == null) victoryMenu = FindChildRecursive(transform, "MenuVictoria");
         if (hudPanel == null) hudPanel = FindChildRecursive(transform, "HudJugador");
+
+        if (btnReiniciar == null) 
+        {
+            GameObject restartObj = FindChildRecursive(transform, "BtnReiniciar");
+            if (restartObj != null) btnReiniciar = restartObj.GetComponent<Button>();
+        }
 
         if (pauseMenu != null) pauseMenu.SetActive(false);
         if (victoryMenu != null) victoryMenu.SetActive(false);
@@ -44,25 +51,26 @@ public class UIManager : MonoBehaviour
         {
             btnContinuar.onClick.AddListener(ResumeGame);
         }
+
+        if (btnReiniciar != null)
+        {
+            btnReiniciar.onClick.AddListener(RestartGame);
+        }
     }
 
     private void Update()
     {
         if (GameManager.Instance == null) return;
         
-        // Si el juego está en el menú de victoria, no alteramos el HUD desde aquí
         if (GameManager.Instance.currentState == GameManager.GameState.Victory) return;
 
         bool isPaused = GameManager.Instance.currentState == GameManager.GameState.Paused;
         
-        // Control del Menú de Pausa
         if (pauseMenu != null && pauseMenu.activeSelf != isPaused)
         {
             pauseMenu.SetActive(isPaused);
         }
 
-        // MODIFICACIÓN: Control del HUD basándose en la pausa
-        // Si está pausado (!isPaused será false), el HUD se apaga. Si se despausa, se enciende.
         if (hudPanel != null && hudPanel.activeSelf == isPaused)
         {
             hudPanel.SetActive(!isPaused);
@@ -73,11 +81,21 @@ public class UIManager : MonoBehaviour
     {
         if (hudPanel != null) hudPanel.SetActive(false);
         if (victoryMenu != null) victoryMenu.SetActive(true);
-        if (pauseMenu != null) pauseMenu.SetActive(false); // Por si acaso estaba abierto
+        if (pauseMenu != null) pauseMenu.SetActive(false); 
     }
 
     public void ResumeGame()
     {
         if (GameManager.Instance != null) GameManager.Instance.ResumeGame();
+    }
+
+    public void RestartGame()
+    {
+        Time.timeScale = 1f; 
+        
+        if (GameManager.Instance != null) GameManager.Instance.ResumeGame();
+
+        Scene currentScene = SceneManager.GetActiveScene();
+        SceneManager.LoadScene(currentScene.name);
     }
 }

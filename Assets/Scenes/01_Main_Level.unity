@@ -1405,6 +1405,7 @@ MonoBehaviour:
   victoryMenu: {fileID: 0}
   hudPanel: {fileID: 0}
   btnContinuar: {fileID: 1364247258}
+  btnReiniciar: {fileID: 947956624}
 --- !u!4 &686587368
 Transform:
   m_ObjectHideFlags: 0
