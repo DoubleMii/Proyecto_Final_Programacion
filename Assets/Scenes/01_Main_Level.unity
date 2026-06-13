@@ -2913,25 +2913,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1105513367 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 4412551108687311680, guid: 28b936a462bde824c80ac5d59b4ceef4, type: 3}
-  m_PrefabInstance: {fileID: 1385185774}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1105513372
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1105513367}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b13a63df766e34b449e50c5ee0ed79ca, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CameraShake
-  shakeDuration: 0.2
-  shakeMagnitude: 0.1
 --- !u!1 &1109327643
 GameObject:
   m_ObjectHideFlags: 0
@@ -3591,13 +3572,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 7335754738721502020, guid: 28b936a462bde824c80ac5d59b4ceef4, type: 3}
+      propertyPath: m_MinMoveDistance
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 4412551108687311680, guid: 28b936a462bde824c80ac5d59b4ceef4, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1105513372}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 28b936a462bde824c80ac5d59b4ceef4, type: 3}
 --- !u!4 &1385185780 stripped
 Transform:

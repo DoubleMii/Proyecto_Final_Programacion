@@ -215,8 +215,8 @@ public class NPCController : MonoBehaviour
         _agent.isStopped = true;
         transform.LookAt(_player);
 
-        // Aquí conectarías la lógica de daño real con tu sistema de vida del jugador
-        // _player.GetComponent<PlayerHealth>().TakeDamage(_enemyData.attackDamage);
+        // El enemigo nos ha alcanzado, disparamos la muerte instantánea para el sigilo
+        EventManager.TriggerPlayerDeath();
 
         if (Vector3.Distance(transform.position, _player.position) > _enemyData.attackRange)
         {

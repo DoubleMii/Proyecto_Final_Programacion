@@ -53,12 +53,16 @@ public class PlayerController : MonoBehaviour
         float currentSpeed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : moveSpeed;
         controller.Move(move * currentSpeed * Time.deltaTime);
 
-        if (controller.isGrounded && velocity.y < 0)
+        // SOLUCIÓN DEFINITIVA SALTO: Comprobamos con una esfera invisible en los pies (ignora bugs de colisión)
+        bool isGrounded = controller.isGrounded || Physics.CheckSphere(transform.position + Vector3.down * 0.9f, 0.3f);
+
+        if (isGrounded && velocity.y < 0)
         {
             velocity.y = -2f;
         }
 
-        if (Input.GetButtonDown("Jump") && controller.isGrounded)
+        // Obligamos a detectar el espacio directamente
+        if ((Input.GetButtonDown("Jump") || Input.GetKeyDown(KeyCode.Space)) && isGrounded)
         {
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }

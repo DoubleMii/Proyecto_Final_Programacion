@@ -18,8 +18,24 @@ public class UIManager : MonoBehaviour
         EventManager.OnVictory -= ShowVictoryMenu;
     }
 
+    private GameObject FindChildRecursive(Transform parent, string name)
+    {
+        foreach (Transform child in parent)
+        {
+            if (child.name == name) return child.gameObject;
+            GameObject result = FindChildRecursive(child, name);
+            if (result != null) return result;
+        }
+        return null;
+    }
+
     private void Start()
     {
+        // Búsqueda recursiva que encuentra objetos aunque estén apagados
+        if (pauseMenu == null) pauseMenu = FindChildRecursive(transform, "MenuPausa");
+        if (victoryMenu == null) victoryMenu = FindChildRecursive(transform, "MenuVictoria");
+        if (hudPanel == null) hudPanel = FindChildRecursive(transform, "HudJugador");
+
         if (pauseMenu != null) pauseMenu.SetActive(false);
         if (victoryMenu != null) victoryMenu.SetActive(false);
         if (hudPanel != null) hudPanel.SetActive(true);
