@@ -91,13 +91,16 @@ public class SaveMenuController : MonoBehaviour
         {
             if (slotButtons[i] == null) continue;
 
+            // Aunque ya no usamos la variable 'exists' para el texto, la dejamos 
+            // por si acaso necesitas esta lógica más adelante o para comprobar que compila bien.
             bool exists = SaveSystem.SaveExists(i);
             
             TextMeshProUGUI btnText = slotButtons[i].GetComponentInChildren<TextMeshProUGUI>();
             if (btnText != null)
             {
                 string baseText = $"Slot {i + 1}";
-                btnText.text = exists ? $"{baseText}\n(Data)" : $"{baseText}\n(Empty)";
+                // MODIFICACIÓN: Ahora solo asigna el texto base, ignorando el (Data) o (Empty)
+                btnText.text = baseText;
             }
 
             Image img = slotButtons[i].GetComponent<Image>();
