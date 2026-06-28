@@ -19,6 +19,12 @@ public class PlayerController : MonoBehaviour
     private Animator anim;
     private Vector3 velocity;
 
+    /// <summary>
+    /// True cuando el jugador está corriendo (Shift pulsado y moviéndose).
+    /// Usado por la IA de los enemigos para detección auditiva.
+    /// </summary>
+    public bool IsRunning => Input.GetKey(KeyCode.LeftShift) && controller != null && controller.velocity.magnitude > 0.1f;
+
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
@@ -50,28 +56,39 @@ public class PlayerController : MonoBehaviour
         float z = Input.GetAxis("Vertical");
 
         Vector3 move = transform.right * x + transform.forward * z;
+        // Si el vector tiene magnitud mayor a 1 (diagonales), lo normalizamos para no ir más rápido en diagonal
+        if (move.magnitude > 1f) move.Normalize();
+
         float currentSpeed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : moveSpeed;
-        controller.Move(move * currentSpeed * Time.deltaTime);
 
-        // SOLUCIÓN DEFINITIVA SALTO: Comprobamos con una esfera invisible en los pies (ignora bugs de colisión)
-        bool isGrounded = controller.isGrounded || Physics.CheckSphere(transform.position + Vector3.down * 0.9f, 0.3f);
+        // SOLUCIÓN DEFINITIVA SALTO: Con el CharacterController, para que isGrounded devuelva True,
+        // el personaje debe estar moviéndose constantemente contra el suelo.
+        // Combinamos el movimiento horizontal y el salto en un único controller.Move()
+        // porque hacer dos llamadas en el mismo frame resetea la propiedad isGrounded.
+        bool isGrounded = controller.isGrounded;
 
-        if (isGrounded && velocity.y < 0)
+        if (isGrounded)
         {
-            velocity.y = -2f;
+            velocity.y = -2f; // Fuerza descendente constante para mantener el contacto con el suelo
+
+            if (Input.GetButtonDown("Jump") || Input.GetKeyDown(KeyCode.Space))
+            {
+                velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            }
+        }
+        else
+        {
+            // Caída rápida y pesada en el aire
+            float currentGravity = (velocity.y < 0) ? gravity * 1.8f : gravity;
+            velocity.y += currentGravity * Time.deltaTime;
         }
 
-        // Obligamos a detectar el espacio directamente
-        if ((Input.GetButtonDown("Jump") || Input.GetKeyDown(KeyCode.Space)) && isGrounded)
-        {
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-        }
-
-        velocity.y += gravity * Time.deltaTime;
-        controller.Move(velocity * Time.deltaTime);
+        // Combinamos movimiento horizontal + vertical en un solo vector final de desplazamiento
+        Vector3 finalMovement = (move * currentSpeed) + velocity;
+        controller.Move(finalMovement * Time.deltaTime);
 
         float speedPercent = move.magnitude * (Input.GetKey(KeyCode.LeftShift) ? 1f : 0.5f);
-        anim.SetFloat("Speed", speedPercent, 0.1f, Time.deltaTime);
+        if (anim != null) anim.SetFloat("Speed", speedPercent, 0.1f, Time.deltaTime);
     }
 
     private void OnControllerColliderHit(ControllerColliderHit hit)

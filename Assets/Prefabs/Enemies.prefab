@@ -32,6 +32,7 @@ Transform:
   - {fileID: 1352870082034539213}
   - {fileID: 3745608734430111123}
   - {fileID: 7148794158774389825}
+  - {fileID: 8248901234567890123}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2263093494320628435
@@ -48,9 +49,10 @@ GameObject:
   - component: {fileID: 4474453984343138230}
   - component: {fileID: 2846362481785836499}
   - component: {fileID: 1795491765653409157}
+  - component: {fileID: 2367524093214404902}
   m_Layer: 0
-  m_Name: Enemy01
-  m_TagString: Untagged
+  m_Name: Enemy01_Guard
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -64,7 +66,7 @@ Transform:
   m_GameObject: {fileID: 2263093494320628435}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 43.1, y: 0.91, z: 64.52}
+  m_LocalPosition: {x: 43.1, y: 0.91, z: 67.22}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -159,10 +161,10 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.5
-  m_Speed: 3.5
+  m_Speed: 2.8
   m_Acceleration: 8
   avoidancePriority: 50
-  m_AngularSpeed: 120
+  m_AngularSpeed: 180
   m_StoppingDistance: 0
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
@@ -183,19 +185,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1deb12b44e4529347b2a50b781749f18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NPCController
-  _enemyData: {fileID: 11400000, guid: e44b631709204cb4e9dac37e02bab962, type: 2}
-  _enemyType: 0
+  _enemyData: {fileID: 11400000, guid: b0f990dc1325958499c39e9078065d1d, type: 2}
+  _enemyType: 1
   _waypoints:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   _waypointWaitTime: 2
-  _detectionRange: 10
-  _fieldOfView: 10
-  _proximityRange: 3
+  _detectionRange: 18.5
+  _fieldOfView: 110
+  _proximityRange: 2
   _minDetectDistance: 0.5
-  _timeToLook: 1
+--- !u!114 &2367524093214404902
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2263093494320628435}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f81d252dc1940d43af605870a37d8a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyVisual
+  _visualType: 0
 --- !u!1 &2933319964521122834
 GameObject:
   m_ObjectHideFlags: 0
@@ -210,9 +224,10 @@ GameObject:
   - component: {fileID: 6352884158221513019}
   - component: {fileID: 6893348081682120368}
   - component: {fileID: 6784039316935015174}
+  - component: {fileID: 6784039316935015175}
   m_Layer: 0
-  m_Name: Enemy03
-  m_TagString: Untagged
+  m_Name: Enemy03_Roamer
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -226,7 +241,7 @@ Transform:
   m_GameObject: {fileID: 2933319964521122834}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 42, y: 0.91, z: -28.04}
+  m_LocalPosition: {x: 37.9, y: 0.91, z: -23.6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -321,10 +336,10 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.5
-  m_Speed: 3.5
-  m_Acceleration: 8
-  avoidancePriority: 50
-  m_AngularSpeed: 120
+  m_Speed: 2.2
+  m_Acceleration: 7
+  avoidancePriority: 55
+  m_AngularSpeed: 150
   m_StoppingDistance: 0
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
@@ -345,20 +360,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1deb12b44e4529347b2a50b781749f18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NPCController
-  _enemyData: {fileID: 11400000, guid: e757fa909d03f744fbb40551aa7e113f, type: 2}
-  _enemyType: 0
-  _waypoints:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  _waypointWaitTime: 2
-  _detectionRange: 10
-  _fieldOfView: 10
-  _proximityRange: 3
+  _enemyData: {fileID: 11400000, guid: 107f9a9c682febf438c1dcfd812059e2, type: 2}
+  _enemyType: 1
+  _waypoints: []
+  _waypointWaitTime: 0
+  _detectionRange: 8
+  _fieldOfView: 90
+  _proximityRange: 2.5
   _minDetectDistance: 0.5
-  _timeToLook: 1
+--- !u!114 &6784039316935015175
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2933319964521122834}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f81d252dc1940d43af605870a37d8a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyVisual
+  _visualType: 2
 --- !u!1 &3892674831223497200
 GameObject:
   m_ObjectHideFlags: 0
@@ -373,9 +395,10 @@ GameObject:
   - component: {fileID: 6006378009186863996}
   - component: {fileID: 7561281526807049407}
   - component: {fileID: 4095820448091188338}
+  - component: {fileID: 8643867349486752972}
   m_Layer: 0
-  m_Name: Enemy02
-  m_TagString: Untagged
+  m_Name: Enemy02_Pursuer
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -389,7 +412,7 @@ Transform:
   m_GameObject: {fileID: 3892674831223497200}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 68.05, y: 0.91, z: 53.29}
+  m_LocalPosition: {x: 68.05, y: 0.91, z: 62.4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -485,9 +508,9 @@ NavMeshAgent:
   m_AgentTypeID: 0
   m_Radius: 0.5
   m_Speed: 3.5
-  m_Acceleration: 8
-  avoidancePriority: 50
-  m_AngularSpeed: 120
+  m_Acceleration: 14
+  avoidancePriority: 40
+  m_AngularSpeed: 250
   m_StoppingDistance: 0
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
@@ -508,16 +531,195 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1deb12b44e4529347b2a50b781749f18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NPCController
-  _enemyData: {fileID: 11400000, guid: e757fa909d03f744fbb40551aa7e113f, type: 2}
-  _enemyType: 0
-  _waypoints:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  _waypointWaitTime: 2
-  _detectionRange: 10
-  _fieldOfView: 10
+  _enemyData: {fileID: 11400000, guid: f377af0470af11b4caa111dd4f5e6ef9, type: 2}
+  _enemyType: 1
+  _waypoints: []
+  _waypointWaitTime: 0
+  _detectionRange: 14
+  _fieldOfView: 130
   _proximityRange: 3
   _minDetectDistance: 0.5
-  _timeToLook: 1
+--- !u!114 &8643867349486752972
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3892674831223497200}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f81d252dc1940d43af605870a37d8a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyVisual
+  _visualType: 1
+--- !u!1 &8248901234567890120
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8248901234567890123}
+  - component: {fileID: 8248901234567890124}
+  - component: {fileID: 8248901234567890125}
+  - component: {fileID: 8248901234567890126}
+  - component: {fileID: 8248901234567890127}
+  - component: {fileID: 8248901234567890128}
+  - component: {fileID: 8248901234567890129}
+  m_Layer: 0
+  m_Name: Enemy04_Watcher
+  m_TagString: Enemy
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8248901234567890123
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8248901234567890120}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 78.36, y: 11.02, z: 35.56}
+  m_LocalScale: {x: 1.1, y: 1.3, z: 1.1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3592081625077733032}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &8248901234567890124
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8248901234567890120}
+  m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &8248901234567890125
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8248901234567890120}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!136 &8248901234567890126
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8248901234567890120}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.5
+  m_Height: 2
+  m_Direction: 1
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!195 &8248901234567890127
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8248901234567890120}
+  m_Enabled: 1
+  m_AgentTypeID: 0
+  m_Radius: 0.5
+  m_Speed: 0.5
+  m_Acceleration: 6
+  avoidancePriority: 60
+  m_AngularSpeed: 30
+  m_StoppingDistance: 0
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 2
+  m_BaseOffset: 1
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4
+--- !u!114 &8248901234567890128
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8248901234567890120}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1deb12b44e4529347b2a50b781749f18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NPCController
+  _enemyData: {fileID: 11400000, guid: 81a6a81525e738a4b8b8920c30bf5d84, type: 2}
+  _enemyType: 3
+  _waypoints: []
+  _waypointWaitTime: 0
+  _detectionRange: 24.2
+  _fieldOfView: 246
+  _proximityRange: 4.4
+  _minDetectDistance: 0.573
+--- !u!114 &8248901234567890129
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8248901234567890120}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f81d252dc1940d43af605870a37d8a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyVisual
+  _visualType: 3
