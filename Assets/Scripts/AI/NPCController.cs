@@ -345,13 +345,28 @@ public class NPCController : MonoBehaviour
     private bool HasLineOfSight(Vector3 origin, Vector3 target, float distance)
     {
         Vector3 direction = (target - origin).normalized;
+        RaycastHit[] hits = Physics.RaycastAll(origin, direction, distance, _lineOfSightMask, QueryTriggerInteraction.Collide);
 
-        if (Physics.Raycast(origin, direction, out RaycastHit hit, distance, _lineOfSightMask, QueryTriggerInteraction.Ignore))
+        if (hits == null || hits.Length == 0)
+            return true;
+
+        System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+        foreach (RaycastHit hit in hits)
         {
-            return hit.transform == _player || hit.transform.IsChildOf(_player);
+            if (hit.collider == null)
+                continue;
+
+            if (hit.transform == transform || hit.transform.IsChildOf(transform))
+                continue;
+
+            if (hit.transform == _player || hit.transform.IsChildOf(_player))
+                return true;
+
+            return false;
         }
 
-        return true;
+        return false;
     }
 
     private void UpdatePatrol(bool canSeePlayer)
@@ -607,12 +622,16 @@ public class NPCController : MonoBehaviour
         if (_player == null || _state != AiState.Attack)
             return false;
 
+        PlayerController playerController = _player.GetComponentInParent<PlayerController>();
+        if (playerController != null && playerController.Controller != null && !playerController.Controller.isGrounded)
+            return false;
+
         Vector3 flatEnemy = new Vector3(transform.position.x, 0f, transform.position.z);
         Vector3 flatPlayer = new Vector3(_player.position.x, 0f, _player.position.z);
         float horizontalDistance = Vector3.Distance(flatEnemy, flatPlayer);
         float verticalDifference = Mathf.Abs(transform.position.y - _player.position.y);
 
-        return horizontalDistance <= GetAttackRange() && verticalDifference <= 1.1f;
+        return horizontalDistance <= GetAttackRange() && verticalDifference <= 0.65f;
     }
 
     private void SetMoveSpeed(float speed)

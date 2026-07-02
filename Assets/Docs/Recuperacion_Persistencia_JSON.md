@@ -85,7 +85,7 @@ save_slot_2.json
 
 ## Cambios realizados para la recuperacion
 
-- El juego arranca siempre desde cero, pero los slots guardados se mantienen entre ejecuciones para demostrar persistencia real.
+- El juego arranca siempre desde cero y limpia los slots anteriores al iniciar, para que la build empiece sin partidas viejas.
 - El guardado manual escribe JSON real en disco. El guardado automatico queda desactivado para no pisar los slots sin que el jugador pulse Guardar.
 - El boton Cargar recupera el slot seleccionado solo cuando el jugador lo pulsa.
 - El boton Reiniciar/Nueva partida empieza desde cero sin borrar los slots guardados.

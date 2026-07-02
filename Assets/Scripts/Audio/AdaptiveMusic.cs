@@ -14,11 +14,19 @@ public class AdaptiveMusic : MonoBehaviour
     private void Start()
     {
         EnsureAudioSetup();
+        RestartMusic();
+    }
+
+    public void RestartMusic()
+    {
+        EnsureAudioSetup();
 
         if (_musicSource != null && _stealthMusic != null)
         {
+            _musicSource.Stop();
             _musicSource.clip = _stealthMusic;
             _musicSource.loop = true;
+            _musicSource.time = 0f;
             _musicSource.Play();
         }
     }
@@ -57,7 +65,6 @@ public class AdaptiveMusic : MonoBehaviour
         _musicSource.loop = true;
         _musicSource.spatialBlend = 0f;
         _musicSource.playOnAwake = false;
-        _musicSource.volume = Mathf.Max(_musicSource.volume, 0.35f);
 
         if (_stealthMusic == null)
             _stealthMusic = CreateToneClip("ExplorationTone", 196f, 0.12f);

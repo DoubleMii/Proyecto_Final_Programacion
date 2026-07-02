@@ -75,9 +75,13 @@ public class PlayerController : MonoBehaviour
         float x = Input.GetAxis("Horizontal");
         float z = Input.GetAxis("Vertical");
 
-        Vector3 move = (transform.right * x + transform.forward * z);
+        Vector3 move = Vector3.ClampMagnitude(transform.right * x + transform.forward * z, 1f);
 
-        float speed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : moveSpeed;
+        bool wantsToRun = Input.GetKey(KeyCode.LeftShift) ||
+                          Input.GetKey(KeyCode.RightShift) ||
+                          Input.GetKey(KeyCode.CapsLock);
+
+        float speed = wantsToRun ? runSpeed : moveSpeed;
 
         controller.Move(move * speed * Time.deltaTime);
 

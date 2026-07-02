@@ -13,6 +13,7 @@ public class PersistenceManager : MonoBehaviour
     [Range(0, 2)]
     public int activeSlot = 0;
 
+    public bool clearSlotsOnStartup = true;
     public float autoSaveInterval = 60f;
     public bool saveOnSceneChange = true;
 
@@ -30,6 +31,9 @@ public class PersistenceManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
+        if (clearSlotsOnStartup)
+            ClearAllSaveSlots();
+
         CurrentData = new GameData();
 
         _sessionStartTime = Time.time;
@@ -38,6 +42,12 @@ public class PersistenceManager : MonoBehaviour
         Debug.Log("[PersistenceManager] Inicializado con partida nueva. Usa Cargar para recuperar un slot guardado.");
 
         OnDataLoaded?.Invoke();
+    }
+
+    private void ClearAllSaveSlots()
+    {
+        for (int i = 0; i < 3; i++)
+            SaveSystem.DeleteSave(i);
     }
 
     private void Update()
@@ -171,9 +181,27 @@ public class PersistenceManager : MonoBehaviour
         foreach (var t in targets)
             t.LoadData(CurrentData);
 
+        if (AudioManager.instance != null)
+            AudioManager.instance.LoadData(CurrentData);
+
         OnDataLoaded?.Invoke();
+        RestartMusic();
 
         Debug.Log("[PersistenceManager] Nueva partida iniciada.");
+    }
+
+    private void RestartMusic()
+    {
+        AudioManager audioManager = AudioManager.instance;
+        if (audioManager != null)
+        {
+            audioManager.RestartMusic();
+            return;
+        }
+
+        AdaptiveMusic adaptiveMusic = FindAnyObjectByType<AdaptiveMusic>();
+        if (adaptiveMusic != null)
+            adaptiveMusic.RestartMusic();
     }
 
     public void ResetActiveSlot()
