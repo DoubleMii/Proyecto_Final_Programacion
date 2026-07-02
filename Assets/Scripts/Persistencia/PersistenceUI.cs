@@ -139,8 +139,8 @@ public class PersistenceUI : MonoBehaviour
     private void DeleteSlot()
     {
         int slot = PersistenceManager.Instance.activeSlot;
-        SaveSystem.DeleteSave(slot);
-        ShowFeedback($"Slot {slot} eliminado");
+        PersistenceManager.Instance.DeleteActiveSlot();
+        ShowFeedback($"Slot {slot} borrado");
     }
 
     private void ShowFeedback(string message)

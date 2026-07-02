@@ -32,17 +32,24 @@ public static class SaveSystem
     // Serializa GameData a JSON y lo escribe en disco.
     // Devuelve true si el guardado fue exitoso.
     
-    public static bool Save(GameData data, int slot = 0)
+    public static bool Save(GameData data, int slot = 0, bool manualSave = true)
     {
         try
         {
             // Actualizar metadatos antes de guardar
             data.saveTimestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             data.saveSlot      = slot;
+            data.isManualSave  = data.isManualSave || manualSave;
             data.stats.saveCount++;
 
             string json = JsonUtility.ToJson(data, prettyPrint: true);
             string path = GetSavePath(slot);
+            string directory = Path.GetDirectoryName(path);
+
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
 
             File.WriteAllText(path, json);
 
@@ -89,6 +96,35 @@ public static class SaveSystem
         }
     }
 
+    public static GameData LoadManualSave(int slot = 0)
+    {
+        string path = GetSavePath(slot);
+
+        if (!File.Exists(path))
+        {
+            return null;
+        }
+
+        try
+        {
+            string json = File.ReadAllText(path);
+            GameData data = JsonUtility.FromJson<GameData>(json);
+
+            if (data == null || !data.isManualSave)
+            {
+                return null;
+            }
+
+            Debug.Log($"[SaveSystem] Carga exitosa del slot {slot} â€” guardado el {data.saveTimestamp}");
+            return data;
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[SaveSystem] Error al cargar slot {slot}: {e.Message}");
+            return null;
+        }
+    }
+
     
     // UTILIDADES
     
@@ -96,7 +132,23 @@ public static class SaveSystem
     //Comprueba si existe un archivo de guardado en el slot indicado.
     public static bool SaveExists(int slot = 0)
     {
-        return File.Exists(GetSavePath(slot));
+        string path = GetSavePath(slot);
+
+        if (!File.Exists(path))
+        {
+            return false;
+        }
+
+        try
+        {
+            string json = File.ReadAllText(path);
+            GameData data = JsonUtility.FromJson<GameData>(json);
+            return data != null && data.isManualSave;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     //Elimina el archivo de guardado de un slot.

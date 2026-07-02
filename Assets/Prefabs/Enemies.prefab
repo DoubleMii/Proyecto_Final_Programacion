@@ -191,11 +191,14 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   _waypointWaitTime: 2
-  _detectionRange: 10
-  _fieldOfView: 10
-  _proximityRange: 3
+  _detectionRange: 14
+  _proximityRange: 4
+  _suspicionSpeed: 4
+  _loseSightSpeed: 1.5
+  _chaseThreshold: 0.25
   _minDetectDistance: 0.5
   _timeToLook: 1
+  _timeToDetect: 1.25
 --- !u!1 &2933319964521122834
 GameObject:
   m_ObjectHideFlags: 0
@@ -354,11 +357,14 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   _waypointWaitTime: 2
-  _detectionRange: 10
-  _fieldOfView: 10
-  _proximityRange: 3
+  _detectionRange: 14
+  _proximityRange: 4
+  _suspicionSpeed: 4
+  _loseSightSpeed: 1.5
+  _chaseThreshold: 0.25
   _minDetectDistance: 0.5
   _timeToLook: 1
+  _timeToDetect: 1.25
 --- !u!1 &3892674831223497200
 GameObject:
   m_ObjectHideFlags: 0
@@ -516,8 +522,11 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   _waypointWaitTime: 2
-  _detectionRange: 10
-  _fieldOfView: 10
-  _proximityRange: 3
+  _detectionRange: 14
+  _proximityRange: 4
+  _suspicionSpeed: 4
+  _loseSightSpeed: 1.5
+  _chaseThreshold: 0.25
   _minDetectDistance: 0.5
   _timeToLook: 1
+  _timeToDetect: 1.25

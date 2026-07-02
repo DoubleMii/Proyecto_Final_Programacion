@@ -1,37 +1,61 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
+using UnityEngine.AI;
+using System.Collections;
 
-// Componente que va en el GameObject del jugador.
-// Se encarga de cargar la posición/estado al iniciar
-// y de actualizar los datos antes de cada guardado.
 [RequireComponent(typeof(CharacterController))]
 public class PlayerPersistence : MonoBehaviour, IDataPersistence
 {
     [Header("Configuración")]
-    [Tooltip("Si true, al iniciar la escena el jugador se teletransporta a la posición guardada")]
     public bool loadPositionOnStart = true;
 
-    
-    // VARIABLES SIMULADAS (reemplazar con las reales del juego)
-    [Header("Estado del Jugador (demo)")]
-    public float health     = 100f;
-    public float maxHealth  = 100f;
-    public float stamina    = 100f;
+    [Header("Estado del jugador")]
+    public float health = 100f;
+    public float maxHealth = 100f;
+    public float stamina = 100f;
     public float maxStamina = 100f;
-    public int   level      = 1;
-    public int   gold       = 0;
+    public int level = 1;
+    public int gold = 0;
 
     private CharacterController _cc;
+    private Vector3 _spawnPosition;
+    private float _spawnRotationY;
+    private bool _hasLoaded;
 
-    
-    // INICIO
-    
     private void Awake()
     {
         _cc = GetComponent<CharacterController>();
+        _spawnPosition = transform.position;
+        _spawnRotationY = transform.eulerAngles.y;
+
+        if (PersistenceManager.Instance != null)
+        {
+            PersistenceManager.Instance.OnDataLoaded += HandleDataLoaded;
+        }
     }
 
     private void Start()
+    {
+        StartCoroutine(InitialLoad());
+    }
+
+    private void OnDestroy()
+    {
+        if (PersistenceManager.Instance != null)
+        {
+            PersistenceManager.Instance.OnDataLoaded -= HandleDataLoaded;
+        }
+    }
+
+    private IEnumerator InitialLoad()
+    {
+        yield return null;
+
+        LoadFromPersistence();
+    }
+
+    private void HandleDataLoaded()
     {
         LoadFromPersistence();
     }
@@ -40,83 +64,95 @@ public class PlayerPersistence : MonoBehaviour, IDataPersistence
     {
         if (data == null) return;
 
-        health     = data.player.health;
-        maxHealth  = data.player.maxHealth;
-        stamina    = data.player.stamina;
+        health = data.player.health;
+        maxHealth = data.player.maxHealth;
+        stamina = data.player.stamina;
         maxStamina = data.player.maxStamina;
-        level      = data.player.level;
-        gold       = data.player.gold;
+        level = data.player.level;
+        gold = data.player.gold;
 
-        if (loadPositionOnStart)
-        {
-            Vector3 savedPos = data.player.Position;
-            if (savedPos != Vector3.zero)
-            {
-                _cc.enabled = false;
-                transform.position = savedPos;
-                transform.rotation = Quaternion.Euler(0f, data.player.rotY, 0f);
-                _cc.enabled = true;
+        Vector3 targetPosition = data.player.hasSavedPosition
+            ? new Vector3(data.player.posX, data.player.posY, data.player.posZ)
+            : _spawnPosition;
 
-                Debug.Log($"[PlayerPersistence] Posición cargada: {savedPos}");
-            }
-        }
+        float targetRotationY = data.player.hasSavedPosition ? data.player.rotY : _spawnRotationY;
+
+        if (loadPositionOnStart || data.player.hasSavedPosition)
+            StartCoroutine(ApplyPosition(targetPosition, targetRotationY));
+
+        _hasLoaded = true;
+    }
+
+    private IEnumerator ApplyPosition(Vector3 pos, float rotY)
+    {
+        yield return null;
+
+        if (NavMesh.SamplePosition(pos, out NavMeshHit hit, 4f, NavMesh.AllAreas))
+            pos = hit.position;
+
+        _cc.enabled = false;
+        transform.position = pos;
+        transform.rotation = Quaternion.Euler(0f, rotY, 0f);
+        _cc.enabled = true;
     }
 
     public void SaveData(GameData data)
     {
         if (data == null) return;
 
-        data.player.Position = transform.position;
+        data.player.posX = transform.position.x;
+        data.player.posY = transform.position.y;
+        data.player.posZ = transform.position.z;
         data.player.rotY = transform.eulerAngles.y;
+        data.player.hasSavedPosition = true;
+        data.player.currentScene = SceneManager.GetActiveScene().name;
 
-        data.player.health     = health;
-        data.player.maxHealth  = maxHealth;
-        data.player.stamina    = stamina;
+        data.player.health = health;
+        data.player.maxHealth = maxHealth;
+        data.player.stamina = stamina;
         data.player.maxStamina = maxStamina;
-        data.player.level      = level;
-        data.player.gold       = gold;
+        data.player.level = level;
+        data.player.gold = gold;
     }
 
     public void LoadFromPersistence()
     {
-        if (PersistenceManager.Instance != null)
-            LoadData(PersistenceManager.Instance.CurrentData);
+        if (PersistenceManager.Instance == null) return;
+        if (PersistenceManager.Instance.CurrentData == null) return;
+
+        LoadData(PersistenceManager.Instance.CurrentData);
     }
 
     public void PushDataToPersistence()
     {
-        if (PersistenceManager.Instance != null)
-            SaveData(PersistenceManager.Instance.CurrentData);
+        if (PersistenceManager.Instance == null) return;
+
+        SaveData(PersistenceManager.Instance.CurrentData);
     }
 
-    
-    // ATAJOS PARA DEMO
-        private void Update()
+    private void Update()
     {
         if (Keyboard.current == null) return;
 
-        // Simular recoger oro con G
         if (Keyboard.current.gKey.wasPressedThisFrame)
         {
             gold += 10;
+
             if (PersistenceManager.Instance?.CurrentData != null)
                 PersistenceManager.Instance.CurrentData.player.gold = gold;
-            Debug.Log($"[PlayerPersistence] Oro: {gold}");
         }
 
-        // Simular recibir daño con H
         if (Keyboard.current.hKey.wasPressedThisFrame)
         {
             health = Mathf.Max(0f, health - 10f);
             PersistenceManager.Instance?.UpdatePlayerHealth(health, maxHealth);
-            Debug.Log($"[PlayerPersistence] Vida: {health}/{maxHealth}");
         }
 
-        // Simular matar enemigo con K
         if (Keyboard.current.kKey.wasPressedThisFrame)
         {
             PersistenceManager.Instance?.RegisterKill();
-            Debug.Log("[PlayerPersistence] Enemigo eliminado registrado.");
         }
+
+        if (!_hasLoaded) return;
     }
 }

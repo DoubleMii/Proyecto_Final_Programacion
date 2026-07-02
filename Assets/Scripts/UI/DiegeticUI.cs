@@ -5,7 +5,6 @@ public class DiegeticUI : MonoBehaviour
     public Color safeColor = Color.green;
     public Color alertColor = Color.red;
 
-    private int enemiesChasing = 0;
     private Renderer rend;
 
     private void Awake()
@@ -16,7 +15,7 @@ public class DiegeticUI : MonoBehaviour
     private void OnEnable()
     {
         EventManager.OnPlayerDetected += UpdateIndicator;
-        if (rend != null) rend.material.color = safeColor;
+        UpdateIndicator(EventManager.IsPlayerDetected);
     }
 
     private void OnDisable()
@@ -26,12 +25,9 @@ public class DiegeticUI : MonoBehaviour
 
     private void UpdateIndicator(bool isDetected)
     {
-        if (isDetected) enemiesChasing++;
-        else enemiesChasing = Mathf.Max(0, enemiesChasing - 1);
-
         if (rend != null)
         {
-            rend.material.color = (enemiesChasing > 0) ? alertColor : safeColor;
+            rend.material.color = isDetected ? alertColor : safeColor;
         }
     }
 }

@@ -1,44 +1,26 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// Manager central de persistencia. Singleton que vive entre escenas.
-/// Coordina el guardado/carga y expone los datos al resto del juego.
-/// Añadir a un GameObject vacío llamado "PersistenceManager" en la escena inicial.
 public class PersistenceManager : MonoBehaviour
 {
-  
     public static PersistenceManager Instance { get; private set; }
 
-
-    //Datos actualmente cargados en memoria.
     public GameData CurrentData { get; private set; }
 
-    
-    // CONFIGURACIÓN INSPECTOR
-    
+    public event System.Action OnDataLoaded;
+
     [Header("Configuración")]
-    [Tooltip("Slot de guardado activo (0, 1 o 2)")]
     [Range(0, 2)]
     public int activeSlot = 0;
 
-    [Tooltip("Guardar automáticamente cada X segundos (0 = desactivado)")]
     public float autoSaveInterval = 60f;
-
-    [Tooltip("Guardar al cambiar de escena")]
     public bool saveOnSceneChange = true;
 
-    
-    // TIEMPO DE JUEGO
-    
     private float _sessionStartTime;
     private float _autoSaveTimer;
 
-    
-    // AWAKE / SINGLETON SETUP
-    
     private void Awake()
     {
-        // Patrón Singleton con DontDestroyOnLoad
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
@@ -48,68 +30,94 @@ public class PersistenceManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        // Intentar cargar datos existentes, si no, crear nueva partida
-        CurrentData = SaveSystem.Load(activeSlot) ?? new GameData();
+        CurrentData = new GameData();
 
         _sessionStartTime = Time.time;
-        _autoSaveTimer    = autoSaveInterval;
+        _autoSaveTimer = autoSaveInterval;
 
-        Debug.Log("[PersistenceManager] Inicializado. Datos cargados del slot " + activeSlot);
+        Debug.Log("[PersistenceManager] Inicializado con partida nueva. Usa Cargar para recuperar un slot guardado.");
+
+        OnDataLoaded?.Invoke();
     }
 
-    
-    // UPDATE — AUTOSAVE Y TIEMPO DE JUEGO
-    
     private void Update()
     {
-        // Acumular tiempo de sesión en los datos
+        if (CurrentData == null)
+        {
+            CurrentData = new GameData();
+        }
+
         CurrentData.stats.totalPlayTimeSeconds += Time.deltaTime;
 
-        // Auto-guardado por intervalo
         if (autoSaveInterval > 0f)
         {
             _autoSaveTimer -= Time.deltaTime;
+
             if (_autoSaveTimer <= 0f)
             {
                 _autoSaveTimer = autoSaveInterval;
-                Save();
-                Debug.Log("[PersistenceManager] Auto-guardado ejecutado.");
+                TrySave(false);
             }
         }
     }
 
-    
-    // GUARDAR
-   
-
-    /// <summary>Guarda los datos actuales en el slot activo.</summary>
     public void Save()
     {
+        TrySave();
+    }
+
+    public bool TrySave()
+    {
+        return TrySave(true);
+    }
+
+    public bool TrySave(bool manualSave)
+    {
+        if (CurrentData == null)
+        {
+            CurrentData = new GameData();
+        }
+
         var targets = FindAllPersistenceObjects();
         foreach (var t in targets)
             t.SaveData(CurrentData);
 
-        SaveSystem.Save(CurrentData, activeSlot);
+        if (!manualSave)
+            return true;
+
+        return SaveSystem.Save(CurrentData, activeSlot, manualSave);
     }
 
-    /// <summary>Guarda en un slot específico.</summary>
     public void SaveToSlot(int slot)
     {
+        TrySaveToSlot(slot);
+    }
+
+    public bool TrySaveToSlot(int slot)
+    {
+        activeSlot = Mathf.Clamp(slot, 0, 2);
+
+        if (CurrentData == null)
+        {
+            CurrentData = new GameData();
+        }
+
         var targets = FindAllPersistenceObjects();
         foreach (var t in targets)
             t.SaveData(CurrentData);
 
-        SaveSystem.Save(CurrentData, slot);
+        return SaveSystem.Save(CurrentData, activeSlot, true);
     }
 
-    
-    // CARGAR
-    
-
-    /// Carga datos desde el slot activo.
     public void Load()
     {
-        GameData loaded = SaveSystem.Load(activeSlot);
+        TryLoad();
+    }
+
+    public bool TryLoad()
+    {
+        GameData loaded = SaveSystem.LoadManualSave(activeSlot);
+
         if (loaded != null)
         {
             CurrentData = loaded;
@@ -117,33 +125,44 @@ public class PersistenceManager : MonoBehaviour
             var targets = FindAllPersistenceObjects();
             foreach (var t in targets)
                 t.LoadData(CurrentData);
+
+            OnDataLoaded?.Invoke();
+
+            return true;
         }
-        else
-        {
-            Debug.LogWarning("[PersistenceManager] No se encontró guardado. Se mantienen los datos actuales.");
-        }
+
+        Debug.LogWarning("[PersistenceManager] No se encontró guardado. Se mantienen los datos actuales.");
+        return false;
     }
 
-    //Carga desde un slot específico.
     public void LoadFromSlot(int slot)
     {
-        GameData loaded = SaveSystem.Load(slot);
+        TryLoadFromSlot(slot);
+    }
+
+    public bool TryLoadFromSlot(int slot)
+    {
+        slot = Mathf.Clamp(slot, 0, 2);
+
+        GameData loaded = SaveSystem.LoadManualSave(slot);
+
         if (loaded != null)
         {
-            activeSlot  = slot;
+            activeSlot = slot;
             CurrentData = loaded;
 
             var targets = FindAllPersistenceObjects();
             foreach (var t in targets)
                 t.LoadData(CurrentData);
+
+            OnDataLoaded?.Invoke();
+
+            return true;
         }
+
+        return false;
     }
 
-    
-    // NUEVA PARTIDA
-    
-
-    /// Reinicia los datos a valores por defecto (nueva partida).
     public void NewGame()
     {
         CurrentData = new GameData();
@@ -152,16 +171,28 @@ public class PersistenceManager : MonoBehaviour
         foreach (var t in targets)
             t.LoadData(CurrentData);
 
+        OnDataLoaded?.Invoke();
+
         Debug.Log("[PersistenceManager] Nueva partida iniciada.");
     }
 
-    
-    // ACTUALIZAR POSICIÓN DEL JUGADOR
-    
+    public void ResetActiveSlot()
+    {
+        NewGame();
+        Debug.Log("[PersistenceManager] Partida reiniciada sin borrar slots.");
+    }
 
-    
-    // Llamar desde el script del jugador para actualizar su posición antes de guardar.
-    // Ejemplo: PersistenceManager.Instance.UpdatePlayerPosition(transform);
+    public void DeleteActiveSlot()
+    {
+        int slotToDelete = activeSlot;
+        SaveSystem.DeleteSave(slotToDelete);
+
+        if (CurrentData != null && CurrentData.saveSlot == slotToDelete)
+            NewGame();
+
+        Debug.Log("[PersistenceManager] Slot " + slotToDelete + " borrado.");
+    }
+
     public void UpdatePlayerPosition(Transform playerTransform)
     {
         if (CurrentData == null) return;
@@ -172,7 +203,6 @@ public class PersistenceManager : MonoBehaviour
         CurrentData.player.rotY = playerTransform.eulerAngles.y;
     }
 
-    //Devuelve la posición guardada del jugador como Vector3.
     public Vector3 GetPlayerPosition()
     {
         if (CurrentData == null) return Vector3.zero;
@@ -184,24 +214,18 @@ public class PersistenceManager : MonoBehaviour
         );
     }
 
-    
-    // ACTUALIZAR VIDA
-    
-
     public void UpdatePlayerHealth(float current, float max)
     {
         if (CurrentData == null) return;
-        CurrentData.player.health    = current;
+
+        CurrentData.player.health = current;
         CurrentData.player.maxHealth = max;
     }
-
-   
-    // INVENTARIO
-    
 
     public void AddItem(string itemName)
     {
         if (CurrentData == null) return;
+
         CurrentData.player.inventory.Add(itemName);
         CurrentData.stats.itemsCollected++;
     }
@@ -216,9 +240,6 @@ public class PersistenceManager : MonoBehaviour
         return CurrentData?.player.inventory.Contains(itemName) ?? false;
     }
 
-    
-    // ESTADÍSTICAS
-    
     public void RegisterKill()
     {
         if (CurrentData != null)
@@ -231,23 +252,28 @@ public class PersistenceManager : MonoBehaviour
             CurrentData.stats.deaths++;
     }
 
-    
-    // AL SALIR
-        private void OnApplicationQuit()
+    private void OnApplicationQuit()
     {
-        Save();
-        Debug.Log("[PersistenceManager] Guardado automático al salir.");
+        if (CurrentData != null)
+        {
+            TrySave(false);
+        }
+
+        Debug.Log("[PersistenceManager] Datos actualizados en memoria al salir.");
     }
 
     private void OnApplicationPause(bool paused)
     {
-        if (paused) Save();
+        if (paused && CurrentData != null) TrySave(false);
     }
 
     private List<IDataPersistence> FindAllPersistenceObjects()
     {
-        MonoBehaviour[] monoBehaviours = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
+        MonoBehaviour[] monoBehaviours =
+            FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
         List<IDataPersistence> list = new List<IDataPersistence>();
+
         foreach (MonoBehaviour mb in monoBehaviours)
         {
             if (mb is IDataPersistence persistenceObj)
@@ -255,6 +281,7 @@ public class PersistenceManager : MonoBehaviour
                 list.Add(persistenceObj);
             }
         }
+
         return list;
     }
 }

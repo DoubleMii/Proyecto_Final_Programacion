@@ -1,315 +1,694 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.AI;
-
-public enum eEnemyState
-{
-    Idle,
-    Patrol,
-    LookingFor,
-    Chase,
-    Attack,
-    Flee
-}
-
-public enum eEnemyType
-{
-    Guard,
-    Pursuer,
-    Roamer
-}
 
 [RequireComponent(typeof(NavMeshAgent))]
 public class NPCController : MonoBehaviour
 {
-    [Header("Datos del enemigo")]
-    [SerializeField] private EnemyData _enemyData; //ScriptableObject con las estadísticas del enemigo
-    [SerializeField] private eEnemyType _enemyType; //Tipo de NPC que define su comportamiento en la FSM
+    public enum EnemyType
+    {
+        Guard,
+        Hunter,
+        Sentinel
+    }
 
-    [Header("Patrulla")]
-    [SerializeField] private Transform[] _waypoints; //Puntos de patrulla, solo usados por el Guard
-    [Range(0f, 10f)]
-    [SerializeField] private float _waypointWaitTime = 2f; //Tiempo de espera en cada punto de patrulla antes de continuar
+    private enum AiState
+    {
+        Patrol,
+        Suspicious,
+        Chase,
+        Search,
+        Attack,
+        Return
+    }
 
-    [Header("Detección")]
-    [Range(1f, 30f)]
-    [SerializeField] private float _detectionRange = 10f; //Rango máximo de detección del jugador
-    [Range(10f, 360f)]
-    [SerializeField] private float _fieldOfView = 120f; //Ángulo de visión en grados para el raycast
-    [Range(1f, 10f)]
-    [SerializeField] private float _proximityRange = 3f; //Radio de detección por proximidad sin necesidad de visión directa
-    [Range(0.01f, 1f)]
+    [SerializeField] private EnemyData _enemyData;
+    [SerializeField] private EnemyType _enemyType;
+    [SerializeField] private Transform[] _waypoints;
+    [SerializeField] private float _waypointWaitTime = 2f;
+
+    [Header("Vision")]
+    [SerializeField] private float _detectionRange = 14f;
+    [SerializeField] private float _proximityRange = 4f;
+    [SerializeField] private float _fieldOfView = 105f;
+    [SerializeField] private LayerMask _lineOfSightMask = ~0;
+
+    [Header("Detection")]
+    [SerializeField] private float _suspicionSpeed = 4f;
+    [SerializeField] private float _loseSightSpeed = 1.5f;
+    [SerializeField] private float _chaseThreshold = 0.65f;
     [SerializeField] private float _minDetectDistance = 0.5f;
-    [Range(0f, 5f)]
     [SerializeField] private float _timeToLook = 1f;
+    [SerializeField] private float _timeToDetect = 1.25f;
+
+    [Header("Search")]
+    [SerializeField] private float _searchDuration = 5f;
+    [SerializeField] private float _repathInterval = 0.25f;
+
+    [Header("Combat")]
+    [SerializeField] private float _attackCooldown = 1.5f;
+    [SerializeField] private float _attackStopDistance = 1.25f;
 
     private NavMeshAgent _agent;
     private Transform _player;
-    private eEnemyState _currentState;
-    private int _currentWaypointIndex;
-    private float _currentHealth;
+    private Renderer[] _renderers;
+    private AudioSource _audioSource;
+
+    private AiState _state;
+    private Vector3 _spawnPosition;
+    private Quaternion _spawnRotation;
+    private Vector3 _lastKnownPlayerPosition;
+    private Vector3[] _fallbackWaypoints;
+    private float _suspicion;
+    private float _stateTimer;
     private float _waitTimer;
-    private bool _isWaiting;
+    private float _repathTimer;
+    private float _attackTimer;
+    private int _wpIndex;
+    private bool _alertSent;
+
+    public EnemyType Type => _enemyType;
+    public string StateName => _state.ToString();
+    public float Suspicion => _suspicion;
 
     private void Awake()
     {
         _agent = GetComponent<NavMeshAgent>();
-        _player = GameObject.FindGameObjectWithTag("Player").transform;
-        _currentHealth = _enemyData.maxHealth;
-        _waitTimer = _enemyData.stopTime;
-        _agent.autoTraverseOffMeshLink = true;
-        //Iniciamos el agente y obtenemos referencias. autoTraverseOffMeshLink habilita saltos y escaleras automáticos
+        _renderers = GetComponentsInChildren<Renderer>();
+        _audioSource = GetComponent<AudioSource>();
+        if (_audioSource == null) _audioSource = gameObject.AddComponent<AudioSource>();
+
+        _spawnPosition = transform.position;
+        _spawnRotation = transform.rotation;
+        EnsureEnemyTag();
+        EnsureContactCollider();
+        FindPlayer();
+        ApplyRoleDefaults();
+        ApplyRoleMaterial();
+        EnsureFallbackWaypoints();
+        ChangeState(AiState.Patrol);
     }
 
-    private void Start()
+    private void OnEnable()
     {
-        SetInitialState();
-        //Asignamos el estado inicial según el tipo de enemigo
+        FindPlayer();
+    }
+
+    private void OnDisable()
+    {
+        SetAlert(false);
     }
 
     private void Update()
     {
-        UpdateFSM();
-        //Actualizamos la máquina de estados cada frame
-    }
-
-    private void SetInitialState()
-    {
-        switch (_enemyType)
+        if (_player == null)
         {
-            case eEnemyType.Guard:
-                ChangeState(eEnemyState.Patrol);
+            FindPlayer();
+            if (_player == null) return;
+        }
+
+        bool canSeePlayer = CanSeePlayer();
+        UpdateSuspicion(canSeePlayer);
+
+        _stateTimer += Time.deltaTime;
+        _attackTimer -= Time.deltaTime;
+        _repathTimer -= Time.deltaTime;
+
+        switch (_state)
+        {
+            case AiState.Patrol:
+                UpdatePatrol(canSeePlayer);
                 break;
-            case eEnemyType.Roamer:
-                ChangeState(eEnemyState.Idle);
+            case AiState.Suspicious:
+                UpdateSuspicious(canSeePlayer);
                 break;
-            case eEnemyType.Pursuer:
-                ChangeState(eEnemyState.Chase);
+            case AiState.Chase:
+                UpdateChase(canSeePlayer);
+                break;
+            case AiState.Search:
+                UpdateSearch(canSeePlayer);
+                break;
+            case AiState.Attack:
+                UpdateAttack(canSeePlayer);
+                break;
+            case AiState.Return:
+                UpdateReturn(canSeePlayer);
                 break;
         }
-        //El Guard patrulla, el Roamer deambula en Idle, el Pursuer persigue desde el inicio
     }
 
-    private void ChangeState(eEnemyState newState)
+    public void ConfigureRole(EnemyType type, EnemyData data = null)
     {
-        if (_currentState != eEnemyState.Chase && newState == eEnemyState.Chase)
-        {
-            EventManager.TriggerPlayerDetected(true);
-            if (VFXManager.Instance != null) VFXManager.Instance.PlayAlert(transform.position + Vector3.up * 2f);
-        }
-        else if (_currentState == eEnemyState.Chase && newState != eEnemyState.Chase)
-        {
-            EventManager.TriggerPlayerDetected(false);
-        }
+        _enemyType = type;
+        if (data != null) _enemyData = data;
 
-        _currentState = newState;
-        //Cambiamos el estado actual de la FSM
+        if (_agent == null) _agent = GetComponent<NavMeshAgent>();
+
+        ApplyRoleDefaults();
+        ApplyRoleMaterial();
     }
 
-    private void UpdateFSM()
+    public void ResetToSpawnPosition()
     {
-        switch (_currentState)
+        if (_agent == null) _agent = GetComponent<NavMeshAgent>();
+
+        _suspicion = 0f;
+        _stateTimer = 0f;
+        _waitTimer = 0f;
+        _repathTimer = 0f;
+        _attackTimer = 0f;
+        _wpIndex = 0;
+        _alertSent = false;
+        _lastKnownPlayerPosition = _spawnPosition;
+
+        if (_agent != null)
         {
-            case eEnemyState.Idle:    HandleIdle();   break;
-            case eEnemyState.Patrol:  HandlePatrol(); break;
-            case eEnemyState.LookingFor:  HandleLookingFor(); break;
-            case eEnemyState.Chase:   HandleChase();  break;
-            case eEnemyState.Attack:  HandleAttack(); break;
-            case eEnemyState.Flee:    HandleFlee();   break;
-        }
-        //Ejecutamos la lógica del estado activo
-    }
+            _agent.isStopped = false;
 
-    // ──────────────────────────────────────────────
-    // ESTADOS
-    // ──────────────────────────────────────────────
-
-    private void HandleIdle()
-    {
-        _agent.isStopped = true;
-
-        if (DetectPlayer())
-        {
-            ChangeState(eEnemyState.Chase);
-        }
-        //El Roamer espera quieto; si detecta al jugador, pasa a Chase
-    }
-
-    private void HandlePatrol()
-    {
-        _agent.isStopped = false;
-        _agent.speed = _enemyData.moveSpeed;
-
-        if (DetectPlayer())
-        {
-            _isWaiting = false;
-            _waitTimer = 0f;
-            ChangeState(eEnemyState.Chase);
-            return;
-        }
-
-        if (_isWaiting)
-        {
-            _waitTimer -= Time.deltaTime;
-            if (_waitTimer <= 0f)
+            if (NavMesh.SamplePosition(_spawnPosition, out NavMeshHit hit, 4f, NavMesh.AllAreas))
             {
-                _isWaiting = false;
-                _currentWaypointIndex = (_currentWaypointIndex + 1) % _waypoints.Length;
-                _agent.SetDestination(_waypoints[_currentWaypointIndex].position);
-                _waitTimer = _enemyData.stopTime;
+                _agent.Warp(hit.position);
+                if (_agent.isOnNavMesh)
+                    _agent.ResetPath();
             }
-            return;
-        }
-
-        if (_waypoints.Length > 0 && !_agent.pathPending && _agent.remainingDistance < _minDetectDistance)
-        {
-            _isWaiting = true;
-            _waitTimer = _waypointWaitTime;
-            _agent.isStopped = true;
-        }
-        //El Guard llega a un waypoint, espera X segundos, y luego va al siguiente en loop
-    }
-
-    private void HandleLookingFor()
-    {
-        float _currTime = _timeToLook;
-        _currTime -= Time.deltaTime;
-
-        _agent.isStopped = true;
-        _isWaiting = true;
-
-        transform.LookAt(_player);
-        if(_currTime <= 0f)
-        {
-            if (DetectPlayer())
+            else
             {
-                ChangeState(eEnemyState.Chase);
+                transform.position = _spawnPosition;
             }
         }
         else
         {
-            ChangeState(eEnemyState.Patrol);
+            transform.position = _spawnPosition;
+        }
+
+        transform.rotation = _spawnRotation;
+        FindPlayer();
+        ChangeState(AiState.Patrol);
+    }
+
+    private void FindPlayer()
+    {
+        GameObject p = GameObject.FindGameObjectWithTag("Player");
+        if (p != null) _player = p.transform;
+    }
+
+    private void EnsureEnemyTag()
+    {
+        try
+        {
+            gameObject.tag = "Enemy";
+        }
+        catch
+        {
+            // Si el tag no existe, el contacto directo se comprueba igualmente por componente.
         }
     }
 
-    private void HandleChase()
+    private void ApplyRoleDefaults()
     {
-        _agent.isStopped = false;
-        _agent.speed = _enemyData.chaseSpeed;
-        _agent.SetDestination(_player.position);
+        float moveSpeed = _enemyData != null && _enemyData.moveSpeed > 0f ? _enemyData.moveSpeed : 2.5f;
+        float chaseSpeed = _enemyData != null && _enemyData.chaseSpeed > 0f ? _enemyData.chaseSpeed : 4.5f;
 
-        float _distanceToPlayer = Vector3.Distance(transform.position, _player.position);
+        switch (_enemyType)
+        {
+            case EnemyType.Hunter:
+                _detectionRange = Mathf.Max(_detectionRange, 18f);
+                _proximityRange = Mathf.Max(_proximityRange, 5f);
+                _fieldOfView = Mathf.Max(_fieldOfView, 120f);
+                _searchDuration = Mathf.Max(_searchDuration, 7f);
+                _agent.speed = Mathf.Max(chaseSpeed, 5.5f);
+                _agent.acceleration = 12f;
+                _agent.stoppingDistance = _attackStopDistance;
+                break;
+            case EnemyType.Sentinel:
+                _detectionRange = Mathf.Max(_detectionRange, 24f);
+                _proximityRange = Mathf.Max(_proximityRange, 3f);
+                _fieldOfView = Mathf.Max(_fieldOfView, 75f);
+                _searchDuration = Mathf.Max(_searchDuration, 4f);
+                _agent.speed = Mathf.Max(moveSpeed, 1.6f);
+                _agent.acceleration = 8f;
+                _agent.stoppingDistance = _attackStopDistance;
+                break;
+            default:
+                _detectionRange = Mathf.Max(_detectionRange, 14f);
+                _proximityRange = Mathf.Max(_proximityRange, 4f);
+                _fieldOfView = Mathf.Max(_fieldOfView, 100f);
+                _agent.speed = Mathf.Max(moveSpeed, 2.5f);
+                _agent.acceleration = 8f;
+                _agent.stoppingDistance = _attackStopDistance;
+                break;
+        }
 
-        if (_distanceToPlayer <= _enemyData.attackRange)
-        {
-            ChangeState(eEnemyState.Attack);
-        }
-        else if (!DetectPlayer() && _enemyType == eEnemyType.Guard)
-        {
-            ChangeState(eEnemyState.Patrol);
-        }
-        //Seguimos al jugador; atacamos si está en rango, o volvemos a Patrol si lo perdemos (solo Guard)
+        _agent.angularSpeed = 360f;
+        _agent.autoBraking = true;
     }
 
-    private void HandleAttack()
+    private void EnsureContactCollider()
     {
-        _agent.isStopped = true;
-        transform.LookAt(_player);
+        if (GetComponent<Collider>() != null)
+            return;
 
-        // El enemigo nos ha alcanzado, disparamos la muerte instantánea para el sigilo
-        EventManager.TriggerPlayerDeath();
-
-        if (Vector3.Distance(transform.position, _player.position) > _enemyData.attackRange)
-        {
-            ChangeState(eEnemyState.Chase);
-        }
-        //Atacamos al jugador mientras está en rango; si se aleja, volvemos a Chase
+        CapsuleCollider collider = gameObject.AddComponent<CapsuleCollider>();
+        collider.center = new Vector3(0f, 1f, 0f);
+        collider.height = 2f;
+        collider.radius = 0.45f;
+        collider.isTrigger = false;
     }
 
-    private void HandleFlee()
+    private void ApplyRoleMaterial()
     {
-        _agent.isStopped = false;
-        _agent.speed = _enemyData.chaseSpeed;
+        if (_renderers == null || _renderers.Length == 0)
+            _renderers = GetComponentsInChildren<Renderer>();
 
-        Vector3 _fleeDirection = (transform.position - _player.position).normalized;
-        Vector3 _fleeTarget = transform.position + _fleeDirection * _detectionRange;
-        _agent.SetDestination(_fleeTarget);
-
-        if (Vector3.Distance(transform.position, _player.position) > _detectionRange * 1.5f)
+        Color color = _enemyType switch
         {
-            ChangeState(eEnemyState.Idle);
+            EnemyType.Hunter => new Color(0.95f, 0.18f, 0.12f),
+            EnemyType.Sentinel => new Color(0.15f, 0.35f, 1f),
+            _ => new Color(0.95f, 0.72f, 0.18f)
+        };
+
+        foreach (Renderer rend in _renderers)
+        {
+            if (rend == null) continue;
+            rend.material.color = color;
         }
-        //Huimos del jugador en dirección contraria; volvemos a Idle al alcanzar distancia segura
     }
 
-    // ──────────────────────────────────────────────
-    // DETECCIÓN
-    // ──────────────────────────────────────────────
-
-    private bool DetectPlayer()
+    private void EnsureFallbackWaypoints()
     {
-        float _distanceToPlayer = Vector3.Distance(transform.position, _player.position);
+        if (HasValidWaypoints()) return;
 
-        // Detección por proximidad: si el jugador está muy cerca, lo detectamos sin necesidad de visión
-        if (_distanceToPlayer <= _proximityRange)
+        _fallbackWaypoints = new Vector3[4];
+        float radius = _enemyType == EnemyType.Sentinel ? 4f : 8f;
+
+        for (int i = 0; i < _fallbackWaypoints.Length; i++)
         {
-            return true;
+            float angle = (360f / _fallbackWaypoints.Length) * i;
+            Vector3 candidate = _spawnPosition + Quaternion.Euler(0f, angle, 0f) * Vector3.forward * radius;
+
+            if (NavMesh.SamplePosition(candidate, out NavMeshHit hit, radius + 3f, NavMesh.AllAreas))
+                _fallbackWaypoints[i] = hit.position;
+            else
+                _fallbackWaypoints[i] = _spawnPosition;
         }
+    }
 
-        // Detección por raycast: comprobamos ángulo de visión y línea de visión directa
-        if (_distanceToPlayer <= _detectionRange)
+    private bool HasValidWaypoints()
+    {
+        if (_waypoints == null || _waypoints.Length == 0) return false;
+
+        foreach (Transform waypoint in _waypoints)
         {
-            Vector3 _directionToPlayer = (_player.position - transform.position).normalized;
-            float _angleToPlayer = Vector3.Angle(transform.forward, _directionToPlayer);
-
-            if (_angleToPlayer <= _fieldOfView * 0.5f)
-            {
-                Vector3 _rayOrigin = transform.position + Vector3.up * 0.8f;
-                RaycastHit _hit;
-
-                if (Physics.Raycast(_rayOrigin, _directionToPlayer, out _hit, _detectionRange))
-                {
-                    return _hit.collider.CompareTag("Player");
-                    //Si el primer objeto que toca el rayo es el Player, hay línea de visión directa
-                }
-            }
+            if (waypoint != null) return true;
         }
 
         return false;
-        //Devolvemos false si no hay detección por ninguno de los dos métodos
     }
 
-    // ──────────────────────────────────────────────
-    // VIDA
-    // ──────────────────────────────────────────────
-
-    public void TakeDamage(float damage)
+    private void UpdateSuspicion(bool canSeePlayer)
     {
-        _currentHealth -= damage;
-
-        if (_currentHealth <= 0f)
+        if (canSeePlayer)
         {
-            Die();
+            _lastKnownPlayerPosition = _player.position;
+            float distance = Vector3.Distance(transform.position, _player.position);
+            float distanceBonus = distance <= _proximityRange ? 2f : 1f;
+            _suspicion += Time.deltaTime * _suspicionSpeed * distanceBonus / Mathf.Max(_timeToDetect, 0.1f);
         }
-        //Restamos vida; si llega a 0 llamamos a Die()
+        else
+        {
+            float lossMultiplier = _state == AiState.Search ? 0.45f : 1f;
+            _suspicion -= Time.deltaTime * _loseSightSpeed * lossMultiplier;
+        }
+
+        _suspicion = Mathf.Clamp01(_suspicion);
     }
 
-    private void Die()
+    private bool CanSeePlayer()
     {
-        Destroy(gameObject);
-        //Destruimos el NPC al morir; aquí podrías añadir animación de muerte o drop de items
+        Vector3 origin = transform.position + Vector3.up * 1.4f;
+        Vector3 target = _player.position + Vector3.up * 1.1f;
+        Vector3 toPlayer = target - origin;
+        float distance = toPlayer.magnitude;
+
+        if (distance <= _minDetectDistance || distance <= _proximityRange)
+            return HasLineOfSight(origin, target, distance);
+
+        if (distance > _detectionRange)
+            return false;
+
+        float angle = Vector3.Angle(transform.forward, toPlayer.normalized);
+        if (angle > _fieldOfView * 0.5f)
+            return false;
+
+        return HasLineOfSight(origin, target, distance);
     }
 
-    // ──────────────────────────────────────────────
-    // GIZMOS (visibles en el editor de Unity)
-    // ──────────────────────────────────────────────
+    private bool HasLineOfSight(Vector3 origin, Vector3 target, float distance)
+    {
+        Vector3 direction = (target - origin).normalized;
+
+        if (Physics.Raycast(origin, direction, out RaycastHit hit, distance, _lineOfSightMask, QueryTriggerInteraction.Ignore))
+        {
+            return hit.transform == _player || hit.transform.IsChildOf(_player);
+        }
+
+        return true;
+    }
+
+    private void UpdatePatrol(bool canSeePlayer)
+    {
+        SetAlert(false);
+        SetMoveSpeed(GetPatrolSpeed());
+
+        if (canSeePlayer || _suspicion > 0.15f)
+        {
+            ChangeState(AiState.Suspicious);
+            return;
+        }
+
+        if (_agent.pathPending) return;
+
+        if (!_agent.hasPath || _agent.remainingDistance <= Mathf.Max(_agent.stoppingDistance + 0.2f, 0.6f))
+        {
+            _waitTimer -= Time.deltaTime;
+            if (_waitTimer <= 0f)
+            {
+                MoveToNextWaypoint();
+                _waitTimer = _waypointWaitTime;
+            }
+        }
+    }
+
+    private void UpdateSuspicious(bool canSeePlayer)
+    {
+        SetAlert(false);
+        SetMoveSpeed(0f);
+        LookAt(_player.position);
+
+        if (_suspicion >= _chaseThreshold)
+        {
+            ChangeState(AiState.Chase);
+            return;
+        }
+
+        if (!canSeePlayer && _stateTimer >= _timeToLook && _suspicion <= 0.05f)
+        {
+            ChangeState(AiState.Return);
+        }
+    }
+
+    private void UpdateChase(bool canSeePlayer)
+    {
+        SetAlert(true);
+        SetMoveSpeed(GetChaseSpeed());
+
+        if (canSeePlayer)
+            _lastKnownPlayerPosition = _player.position;
+
+        float distance = Vector3.Distance(transform.position, _player.position);
+        float attackRange = GetAttackRange();
+
+        if (distance <= attackRange && canSeePlayer)
+        {
+            ChangeState(AiState.Attack);
+            return;
+        }
+
+        if (_repathTimer <= 0f)
+        {
+            _agent.SetDestination(_lastKnownPlayerPosition);
+            _repathTimer = _repathInterval;
+        }
+
+        if (!canSeePlayer && _suspicion <= 0.25f)
+        {
+            ChangeState(AiState.Search);
+        }
+    }
+
+    private void UpdateSearch(bool canSeePlayer)
+    {
+        SetAlert(false);
+        SetMoveSpeed(GetPatrolSpeed() * 0.8f);
+
+        if (canSeePlayer)
+        {
+            ChangeState(AiState.Chase);
+            return;
+        }
+
+        if (!_agent.hasPath && _repathTimer <= 0f)
+        {
+            Vector3 searchPoint = _lastKnownPlayerPosition + Random.insideUnitSphere * 4f;
+            searchPoint.y = _lastKnownPlayerPosition.y;
+            if (NavMesh.SamplePosition(searchPoint, out NavMeshHit hit, 5f, NavMesh.AllAreas))
+                _agent.SetDestination(hit.position);
+
+            _repathTimer = 1f;
+        }
+
+        if (_stateTimer >= _searchDuration || _suspicion <= 0.02f)
+        {
+            ChangeState(AiState.Return);
+        }
+    }
+
+    private void UpdateAttack(bool canSeePlayer)
+    {
+        SetAlert(true);
+        LookAt(_player.position);
+
+        float distance = Vector3.Distance(transform.position, _player.position);
+        if (!canSeePlayer || distance > GetAttackRange() + 0.8f)
+        {
+            ChangeState(AiState.Chase);
+            return;
+        }
+
+        SetMoveSpeed(distance > _attackStopDistance ? GetChaseSpeed() : 0f);
+
+        if (_repathTimer <= 0f)
+        {
+            _agent.SetDestination(_player.position);
+            _repathTimer = _repathInterval;
+        }
+
+        if (_attackTimer <= 0f)
+        {
+            _attackTimer = _attackCooldown;
+            PlayTone(880f, 0.08f);
+
+            if (CanDamagePlayer())
+                EventManager.TriggerPlayerDeath();
+        }
+    }
+
+    private void UpdateReturn(bool canSeePlayer)
+    {
+        SetAlert(false);
+        SetMoveSpeed(GetPatrolSpeed());
+
+        if (canSeePlayer)
+        {
+            ChangeState(AiState.Suspicious);
+            return;
+        }
+
+        if (!_agent.hasPath || _agent.remainingDistance <= Mathf.Max(_agent.stoppingDistance + 0.2f, 0.6f))
+        {
+            ChangeState(AiState.Patrol);
+        }
+    }
+
+    private void ChangeState(AiState newState)
+    {
+        if (_state == newState && _stateTimer > 0f) return;
+
+        _state = newState;
+        _stateTimer = 0f;
+        _repathTimer = 0f;
+
+        switch (_state)
+        {
+            case AiState.Patrol:
+                _waitTimer = 0f;
+                break;
+            case AiState.Search:
+                _agent.SetDestination(_lastKnownPlayerPosition);
+                break;
+            case AiState.Return:
+                MoveToClosestWaypointOrSpawn();
+                break;
+            case AiState.Chase:
+            case AiState.Attack:
+                SetAlert(true);
+                PlayTone(_enemyType == EnemyType.Hunter ? 740f : 520f, 0.12f);
+                break;
+        }
+    }
+
+    private void MoveToNextWaypoint()
+    {
+        Vector3 target = GetWaypointPosition(_wpIndex);
+        _wpIndex++;
+        _agent.SetDestination(target);
+
+        if (VFXManager.Instance != null && Random.value < 0.2f)
+            VFXManager.Instance.PlayDust(transform.position);
+    }
+
+    private void MoveToClosestWaypointOrSpawn()
+    {
+        Vector3 target = _spawnPosition;
+        float bestDistance = float.MaxValue;
+        int count = GetWaypointCount();
+
+        for (int i = 0; i < count; i++)
+        {
+            Vector3 candidate = GetWaypointPosition(i);
+            float distance = Vector3.SqrMagnitude(transform.position - candidate);
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                target = candidate;
+                _wpIndex = i;
+            }
+        }
+
+        if (NavMesh.SamplePosition(target, out NavMeshHit hit, 6f, NavMesh.AllAreas))
+            _agent.SetDestination(hit.position);
+        else
+            _agent.SetDestination(_spawnPosition);
+    }
+
+    private int GetWaypointCount()
+    {
+        if (HasValidWaypoints()) return _waypoints.Length;
+        return _fallbackWaypoints != null ? _fallbackWaypoints.Length : 0;
+    }
+
+    private Vector3 GetWaypointPosition(int index)
+    {
+        if (HasValidWaypoints())
+        {
+            for (int tries = 0; tries < _waypoints.Length; tries++)
+            {
+                int wrapped = Mathf.Abs(index + tries) % _waypoints.Length;
+                if (_waypoints[wrapped] != null)
+                    return _waypoints[wrapped].position;
+            }
+        }
+
+        if (_fallbackWaypoints == null || _fallbackWaypoints.Length == 0)
+            return _spawnPosition;
+
+        return _fallbackWaypoints[Mathf.Abs(index) % _fallbackWaypoints.Length];
+    }
+
+    private float GetPatrolSpeed()
+    {
+        float speed = _enemyData != null && _enemyData.moveSpeed > 0f ? _enemyData.moveSpeed : 2.5f;
+        return _enemyType == EnemyType.Sentinel ? Mathf.Min(speed, 2f) : speed;
+    }
+
+    private float GetChaseSpeed()
+    {
+        float speed = _enemyData != null && _enemyData.chaseSpeed > 0f ? _enemyData.chaseSpeed : 4.5f;
+        return _enemyType == EnemyType.Hunter ? Mathf.Max(speed, 5.5f) : speed;
+    }
+
+    private float GetAttackRange()
+    {
+        float range = _enemyData != null && _enemyData.attackRange > 0f ? _enemyData.attackRange : 1.5f;
+        return Mathf.Clamp(range, 1.1f, 1.6f);
+    }
+
+    private bool CanDamagePlayer()
+    {
+        if (_player == null || _state != AiState.Attack)
+            return false;
+
+        Vector3 flatEnemy = new Vector3(transform.position.x, 0f, transform.position.z);
+        Vector3 flatPlayer = new Vector3(_player.position.x, 0f, _player.position.z);
+        float horizontalDistance = Vector3.Distance(flatEnemy, flatPlayer);
+        float verticalDifference = Mathf.Abs(transform.position.y - _player.position.y);
+
+        return horizontalDistance <= GetAttackRange() && verticalDifference <= 1.1f;
+    }
+
+    private void SetMoveSpeed(float speed)
+    {
+        if (speed <= 0.01f)
+        {
+            _agent.isStopped = true;
+            _agent.velocity = Vector3.zero;
+            return;
+        }
+
+        _agent.isStopped = false;
+        _agent.speed = speed;
+    }
+
+    private void SetAlert(bool alert)
+    {
+        if (_alertSent == alert) return;
+
+        _alertSent = alert;
+        EventManager.TriggerPlayerDetected(alert);
+    }
+
+    private void LookAt(Vector3 target)
+    {
+        Vector3 direction = target - transform.position;
+        direction.y = 0f;
+        if (direction.sqrMagnitude < 0.001f) return;
+
+        Quaternion targetRotation = Quaternion.LookRotation(direction.normalized);
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _agent.angularSpeed * Time.deltaTime);
+    }
+
+    private void PlayTone(float frequency, float duration)
+    {
+        if (_audioSource == null || !_audioSource.enabled) return;
+
+        AudioClip clip = AudioClip.Create("NPCAlertTone", Mathf.RoundToInt(44100 * duration), 1, 44100, false);
+        float[] samples = new float[clip.samples];
+        for (int i = 0; i < samples.Length; i++)
+        {
+            samples[i] = Mathf.Sin(2f * Mathf.PI * frequency * i / 44100f) * 0.12f;
+        }
+
+        clip.SetData(samples, 0);
+        _audioSource.spatialBlend = 1f;
+        _audioSource.PlayOneShot(clip);
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        TryCatchPlayer(collision.gameObject);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        TryCatchPlayer(other.gameObject);
+    }
+
+    private void TryCatchPlayer(GameObject other)
+    {
+        if (other == null)
+            return;
+
+        if ((other.CompareTag("Player") || other.GetComponentInParent<PlayerController>() != null) && CanDamagePlayer())
+            EventManager.TriggerPlayerDeath();
+    }
 
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, _detectionRange);
-
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, _proximityRange);
-        //Dibujamos en el editor el rango de detección (amarillo) y proximidad (rojo) para ajustar visualmente
+
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawLine(transform.position + Vector3.up, _lastKnownPlayerPosition + Vector3.up);
     }
 }

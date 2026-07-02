@@ -44,6 +44,8 @@ public class UIManager : MonoBehaviour
         {
             btnContinuar.onClick.AddListener(ResumeGame);
         }
+
+        AutoWireButtons();
     }
 
     private void Update()
@@ -51,10 +53,20 @@ public class UIManager : MonoBehaviour
         if (GameManager.Instance == null) return;
         
         bool isPaused = GameManager.Instance.currentState == GameManager.GameState.Paused;
+        bool shouldShowHud = GameManager.Instance.currentState == GameManager.GameState.Playing;
+
         if (pauseMenu != null && pauseMenu.activeSelf != isPaused)
         {
             pauseMenu.SetActive(isPaused);
+
+            if (isPaused)
+                RuntimeAudioFeedback.PlayMenuOpen();
+            else
+                RuntimeAudioFeedback.PlayMenuClose();
         }
+
+        if (hudPanel != null && hudPanel.activeSelf != shouldShowHud)
+            hudPanel.SetActive(shouldShowHud);
     }
 
     private void ShowVictoryMenu()
@@ -66,5 +78,34 @@ public class UIManager : MonoBehaviour
     public void ResumeGame()
     {
         if (GameManager.Instance != null) GameManager.Instance.ResumeGame();
+    }
+
+    public void RestartGame()
+    {
+        if (GameManager.Instance != null) GameManager.Instance.RestartCurrentScene();
+    }
+
+    public void QuitGame()
+    {
+        if (GameManager.Instance != null) GameManager.Instance.QuitGame();
+    }
+
+    private void AutoWireButtons()
+    {
+        Button[] buttons = GetComponentsInChildren<Button>(true);
+        foreach (Button button in buttons)
+        {
+            if (button.GetComponentInParent<SaveMenuController>(true) != null)
+                continue;
+
+            string buttonName = button.name.ToLowerInvariant();
+
+            if (buttonName.Contains("continuar") || buttonName.Contains("resume"))
+                button.onClick.AddListener(ResumeGame);
+            else if (buttonName.Contains("reiniciar") || buttonName.Contains("restart") || buttonName.Contains("reset"))
+                button.onClick.AddListener(RestartGame);
+            else if (buttonName.Contains("salir") || buttonName.Contains("quit") || buttonName.Contains("exit"))
+                button.onClick.AddListener(QuitGame);
+        }
     }
 }

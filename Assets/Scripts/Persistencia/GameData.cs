@@ -31,6 +31,7 @@ public class GameData
     public string saveTimestamp;   // Fecha y hora del guardado
     public string gameVersion;     // Versión del juego al guardar
     public int    saveSlot;        // Slot de guardado (0, 1, 2...)
+    public bool   isManualSave;    // True cuando el jugador guardo en un slot
 
     // Constructor: inicializa todos los sub-objetos con valores por defecto.
     // Se llama cuando se crea una partida nueva.
@@ -43,6 +44,7 @@ public class GameData
         saveTimestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         gameVersion   = "1.0.0";
         saveSlot      = 0;
+        isManualSave  = false;
     }
 }
 
@@ -59,6 +61,7 @@ public class PlayerData
 
     // Rotación (solo Y es suficiente para la mayoría de juegos)
     public float rotY;
+    public bool  hasSavedPosition;
 
     // Propiedad auxiliar para simplificar coordenadas en C#
     public Vector3 Position
@@ -99,6 +102,7 @@ public class PlayerData
         posY          = 0f;
         posZ          = 0f;
         rotY          = 0f;
+        hasSavedPosition = false;
         health        = 100f;
         maxHealth     = 100f;
         stamina       = 100f;

@@ -6,7 +6,9 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
 
     public enum GameState { MainMenu, Playing, Paused, GameOver, Victory }
-    public GameState currentState;
+    public GameState currentState { get; private set; }
+
+    private bool _initialized;
 
     private void Awake()
     {
@@ -15,8 +17,13 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
         Instance = this;
         DontDestroyOnLoad(gameObject);
+
+        Debug.Log("GameManager creado: " + gameObject.name);
+
+        Time.timeScale = 1f;
     }
 
     private void OnEnable()
@@ -33,15 +40,9 @@ public class GameManager : MonoBehaviour
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
-    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-    {
-        Time.timeScale = 1f;
-        ChangeState(GameState.Playing);
-    }
-
     private void Start()
     {
-        ChangeState(GameState.Playing);
+        SetState(GameState.Playing);
     }
 
     private void Update()
@@ -53,14 +54,30 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void ChangeState(GameState newState)
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (!_initialized)
+            _initialized = true;
+
+        Time.timeScale = 1f;
+        SetState(GameState.Playing);
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+        EventManager.ResetPlayerDetection();
+
+        Debug.Log("Scene cargada: " + scene.name);
+    }
+
+    public void SetState(GameState newState)
     {
         currentState = newState;
+        Debug.Log("Estado: " + currentState);
     }
 
     public void PauseGame()
     {
-        ChangeState(GameState.Paused);
+        SetState(GameState.Paused);
+
         Time.timeScale = 0f;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -68,22 +85,65 @@ public class GameManager : MonoBehaviour
 
     public void ResumeGame()
     {
-        ChangeState(GameState.Playing);
+        SetState(GameState.Playing);
+
         Time.timeScale = 1f;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
+    public void RestartCurrentScene()
+    {
+        Time.timeScale = 1f;
+        ResetEnemiesToSpawn();
+
+        if (PersistenceManager.Instance != null)
+            PersistenceManager.Instance.NewGame();
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    private void ResetEnemiesToSpawn()
+    {
+        NPCController[] enemies = FindObjectsByType<NPCController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        foreach (NPCController enemy in enemies)
+        {
+            if (enemy != null)
+                enemy.ResetToSpawnPosition();
+        }
+    }
+
+    public void QuitGame()
+    {
+        if (PersistenceManager.Instance != null)
+            PersistenceManager.Instance.TrySave(false);
+
+        Time.timeScale = 1f;
+
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
+
     private void HandleGameOver()
     {
         if (currentState == GameState.GameOver) return;
-        ChangeState(GameState.GameOver);
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+
+        SetState(GameState.GameOver);
+        RestartCurrentScene();
     }
 
     private void HandleVictory()
     {
         if (currentState == GameState.Victory) return;
-        ChangeState(GameState.Victory);
+
+        SetState(GameState.Victory);
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+        Time.timeScale = 0f;
     }
 }
