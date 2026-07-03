@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement;
 using UnityEngine.AI;
 using System.Collections;
 
@@ -13,10 +12,6 @@ public class PlayerPersistence : MonoBehaviour, IDataPersistence
     [Header("Estado del jugador")]
     public float health = 100f;
     public float maxHealth = 100f;
-    public float stamina = 100f;
-    public float maxStamina = 100f;
-    public int level = 1;
-    public int gold = 0;
 
     private CharacterController _cc;
     private Vector3 _spawnPosition;
@@ -66,10 +61,6 @@ public class PlayerPersistence : MonoBehaviour, IDataPersistence
 
         health = data.player.health;
         maxHealth = data.player.maxHealth;
-        stamina = data.player.stamina;
-        maxStamina = data.player.maxStamina;
-        level = data.player.level;
-        gold = data.player.gold;
 
         Vector3 targetPosition = data.player.hasSavedPosition
             ? new Vector3(data.player.posX, data.player.posY, data.player.posZ)
@@ -105,14 +96,9 @@ public class PlayerPersistence : MonoBehaviour, IDataPersistence
         data.player.posZ = transform.position.z;
         data.player.rotY = transform.eulerAngles.y;
         data.player.hasSavedPosition = true;
-        data.player.currentScene = SceneManager.GetActiveScene().name;
 
         data.player.health = health;
         data.player.maxHealth = maxHealth;
-        data.player.stamina = stamina;
-        data.player.maxStamina = maxStamina;
-        data.player.level = level;
-        data.player.gold = gold;
     }
 
     public void LoadFromPersistence()
@@ -133,14 +119,6 @@ public class PlayerPersistence : MonoBehaviour, IDataPersistence
     private void Update()
     {
         if (Keyboard.current == null) return;
-
-        if (Keyboard.current.gKey.wasPressedThisFrame)
-        {
-            gold += 10;
-
-            if (PersistenceManager.Instance?.CurrentData != null)
-                PersistenceManager.Instance.CurrentData.player.gold = gold;
-        }
 
         if (Keyboard.current.hKey.wasPressedThisFrame)
         {

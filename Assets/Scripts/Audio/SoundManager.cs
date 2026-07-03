@@ -164,11 +164,6 @@ public class AudioManager : MonoBehaviour, IDataPersistence
 
     public void SaveData(GameData data)
     {
-        if (data == null || data.settings == null) return;
-
-        data.settings.masterVolume = _masterVolume;
-        data.settings.musicVolume = _musicVolume;
-        data.settings.sfxVolume = _sfxVolume;
         SaveGlobalAudioSettings();
     }
 

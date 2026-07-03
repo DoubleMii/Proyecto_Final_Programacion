@@ -80,8 +80,6 @@ public class PersistenceUI : MonoBehaviour
             GUI.color = Color.white;
 
             GUILayout.Label($"Vida:       {d.player.health}/{d.player.maxHealth}");
-            GUILayout.Label($"Nivel:      {d.player.level}");
-            GUILayout.Label($"Oro:        {d.player.gold}");
             GUILayout.Label($"Inventario: {d.player.inventory.Count} objetos");
             GUILayout.Label($"Muertes:    {d.stats.deaths}");
             GUILayout.Label($"Kills:      {d.stats.enemiesKilled}");
