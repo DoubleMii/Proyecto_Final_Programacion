@@ -17,7 +17,12 @@ public class PlayerPersistence : MonoBehaviour, IDataPersistence
     [HideInInspector] public int level = 1;
     [HideInInspector] public int gold = 0;
 
+    [Header("Audio")]
+    [SerializeField] private AudioClip damageClip;
+    [SerializeField, Range(0f, 1f)] private float damageVolume = 0.85f;
+
     private CharacterController _cc;
+    private AudioSource _audioSource;
     private Vector3 _spawnPosition;
     private float _spawnRotationY;
     private bool _hasLoaded;
@@ -25,6 +30,14 @@ public class PlayerPersistence : MonoBehaviour, IDataPersistence
     private void Awake()
     {
         _cc = GetComponent<CharacterController>();
+        _audioSource = GetComponent<AudioSource>();
+        if (_audioSource == null)
+            _audioSource = gameObject.AddComponent<AudioSource>();
+
+        _audioSource.playOnAwake = false;
+        _audioSource.spatialBlend = 0f;
+        _audioSource.volume = 1f;
+
         _spawnPosition = transform.position;
         _spawnRotationY = transform.eulerAngles.y;
 
@@ -126,9 +139,18 @@ public class PlayerPersistence : MonoBehaviour, IDataPersistence
 
         health = Mathf.Max(0f, health - amount);
         PersistenceManager.Instance?.UpdatePlayerHealth(health, maxHealth);
+        PlayDamageSound();
 
         if (health <= 0f)
             EventManager.TriggerPlayerDeath();
+    }
+
+    private void PlayDamageSound()
+    {
+        if (_audioSource == null || damageClip == null)
+            return;
+
+        _audioSource.PlayOneShot(damageClip, damageVolume);
     }
 
     private void Update()

@@ -490,7 +490,6 @@ public class NPCController : MonoBehaviour
         if (_attackTimer <= 0f)
         {
             _attackTimer = _attackCooldown;
-            PlayTone(880f, 0.08f);
 
             if (CanDamagePlayer())
                 DamagePlayer();
@@ -536,7 +535,6 @@ public class NPCController : MonoBehaviour
             case AiState.Chase:
             case AiState.Attack:
                 SetAlert(true);
-                PlayTone(_enemyType == EnemyType.Hunter ? 740f : 520f, 0.12f);
                 break;
         }
     }
@@ -677,22 +675,6 @@ public class NPCController : MonoBehaviour
 
         Quaternion targetRotation = Quaternion.LookRotation(direction.normalized);
         transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _agent.angularSpeed * Time.deltaTime);
-    }
-
-    private void PlayTone(float frequency, float duration)
-    {
-        if (_audioSource == null || !_audioSource.enabled) return;
-
-        AudioClip clip = AudioClip.Create("NPCAlertTone", Mathf.RoundToInt(44100 * duration), 1, 44100, false);
-        float[] samples = new float[clip.samples];
-        for (int i = 0; i < samples.Length; i++)
-        {
-            samples[i] = Mathf.Sin(2f * Mathf.PI * frequency * i / 44100f) * 0.12f;
-        }
-
-        clip.SetData(samples, 0);
-        _audioSource.spatialBlend = 1f;
-        _audioSource.PlayOneShot(clip);
     }
 
     private void OnCollisionEnter(Collision collision)
