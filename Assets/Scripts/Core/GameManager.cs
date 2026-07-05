@@ -94,11 +94,21 @@ public class GameManager : MonoBehaviour
 
     public void RestartCurrentScene()
     {
+        RestartCurrentScene(false);
+    }
+
+    private void RestartCurrentScene(bool registerDeath)
+    {
         Time.timeScale = 1f;
         ResetEnemiesToSpawn();
 
         if (PersistenceManager.Instance != null)
-            PersistenceManager.Instance.NewGame();
+        {
+            PersistenceManager.Instance.NewGame(registerDeath);
+
+            if (registerDeath)
+                PersistenceManager.Instance.RegisterDeath();
+        }
 
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
@@ -133,7 +143,7 @@ public class GameManager : MonoBehaviour
         if (currentState == GameState.GameOver) return;
 
         SetState(GameState.GameOver);
-        RestartCurrentScene();
+        RestartCurrentScene(true);
     }
 
     private void HandleVictory()

@@ -173,9 +173,14 @@ public class PersistenceManager : MonoBehaviour
         return false;
     }
 
-    public void NewGame()
+    public void NewGame(bool preserveStats = false)
     {
+        int previousDeaths = CurrentData != null && CurrentData.stats != null ? CurrentData.stats.deaths : 0;
+
         CurrentData = new GameData();
+        if (preserveStats)
+            CurrentData.stats.deaths = previousDeaths;
+
         EventManager.ResetPlayerDetection();
 
         var targets = FindAllPersistenceObjects();
