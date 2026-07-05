@@ -493,7 +493,7 @@ public class NPCController : MonoBehaviour
             PlayTone(880f, 0.08f);
 
             if (CanDamagePlayer())
-                EventManager.TriggerPlayerDeath();
+                DamagePlayer();
         }
     }
 
@@ -634,6 +634,20 @@ public class NPCController : MonoBehaviour
         return horizontalDistance <= GetAttackRange() && verticalDifference <= 0.65f;
     }
 
+    private void DamagePlayer()
+    {
+        PlayerPersistence playerPersistence = _player.GetComponentInParent<PlayerPersistence>();
+        if (playerPersistence == null)
+            return;
+
+        playerPersistence.TakeDamage(GetAttackDamage());
+    }
+
+    private float GetAttackDamage()
+    {
+        return _enemyData != null && _enemyData.attackDamage > 0f ? _enemyData.attackDamage : 10f;
+    }
+
     private void SetMoveSpeed(float speed)
     {
         if (speed <= 0.01f)
@@ -697,7 +711,7 @@ public class NPCController : MonoBehaviour
             return;
 
         if ((other.CompareTag("Player") || other.GetComponentInParent<PlayerController>() != null) && CanDamagePlayer())
-            EventManager.TriggerPlayerDeath();
+            DamagePlayer();
     }
 
     private void OnDrawGizmosSelected()

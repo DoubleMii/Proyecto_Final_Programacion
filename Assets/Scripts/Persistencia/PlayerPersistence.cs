@@ -12,6 +12,10 @@ public class PlayerPersistence : MonoBehaviour, IDataPersistence
     [Header("Estado del jugador")]
     public float health = 100f;
     public float maxHealth = 100f;
+    [HideInInspector] public float stamina = 100f;
+    [HideInInspector] public float maxStamina = 100f;
+    [HideInInspector] public int level = 1;
+    [HideInInspector] public int gold = 0;
 
     private CharacterController _cc;
     private Vector3 _spawnPosition;
@@ -116,19 +120,24 @@ public class PlayerPersistence : MonoBehaviour, IDataPersistence
         SaveData(PersistenceManager.Instance.CurrentData);
     }
 
+    public void TakeDamage(float amount)
+    {
+        if (amount <= 0f) return;
+
+        health = Mathf.Max(0f, health - amount);
+        PersistenceManager.Instance?.UpdatePlayerHealth(health, maxHealth);
+
+        if (health <= 0f)
+            EventManager.TriggerPlayerDeath();
+    }
+
     private void Update()
     {
         if (Keyboard.current == null) return;
 
         if (Keyboard.current.hKey.wasPressedThisFrame)
         {
-            health = Mathf.Max(0f, health - 10f);
-            PersistenceManager.Instance?.UpdatePlayerHealth(health, maxHealth);
-        }
-
-        if (Keyboard.current.kKey.wasPressedThisFrame)
-        {
-            PersistenceManager.Instance?.RegisterKill();
+            TakeDamage(10f);
         }
 
         if (!_hasLoaded) return;

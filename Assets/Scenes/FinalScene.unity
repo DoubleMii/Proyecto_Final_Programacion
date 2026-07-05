@@ -793,8 +793,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 798, y: 469}
-  m_SizeDelta: {x: 200, y: 50}
+  m_AnchoredPosition: {x: 679.88916, y: 469}
+  m_SizeDelta: {x: 436.2217, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &239770258
 MonoBehaviour:
@@ -816,7 +816,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Objetivo: Alcanza la salida sin ser detectado'
+  m_text: 'Objetivo: Alcanza la salida sin que los zombies te eliminen.'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2078,6 +2078,8 @@ MonoBehaviour:
   victoryMenu: {fileID: 0}
   hudPanel: {fileID: 0}
   btnContinuar: {fileID: 1364247258}
+  healthText: {fileID: 0}
+  healthSlider: {fileID: 0}
 --- !u!4 &686587368
 Transform:
   m_ObjectHideFlags: 0

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 /// Contenedor principal de los datos persistentes del juego.
@@ -51,8 +50,6 @@ public class PlayerData
     public float health;
     public float maxHealth;
 
-    public List<string> inventory;
-
     public PlayerData()
     {
         posX = 0f;
@@ -62,7 +59,6 @@ public class PlayerData
         hasSavedPosition = false;
         health = 100f;
         maxHealth = 100f;
-        inventory = new List<string>();
     }
 }
 
@@ -70,17 +66,13 @@ public class PlayerData
 public class StatsData
 {
     public float totalPlayTimeSeconds;
-    public int enemiesKilled;
     public int deaths;
-    public int itemsCollected;
     public int saveCount;
 
     public StatsData()
     {
         totalPlayTimeSeconds = 0f;
-        enemiesKilled = 0;
         deaths = 0;
-        itemsCollected = 0;
         saveCount = 0;
     }
 }

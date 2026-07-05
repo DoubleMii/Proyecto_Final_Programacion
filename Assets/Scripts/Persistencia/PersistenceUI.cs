@@ -80,9 +80,7 @@ public class PersistenceUI : MonoBehaviour
             GUI.color = Color.white;
 
             GUILayout.Label($"Vida:       {d.player.health}/{d.player.maxHealth}");
-            GUILayout.Label($"Inventario: {d.player.inventory.Count} objetos");
             GUILayout.Label($"Muertes:    {d.stats.deaths}");
-            GUILayout.Label($"Kills:      {d.stats.enemiesKilled}");
 
             float mins = d.stats.totalPlayTimeSeconds / 60f;
             GUILayout.Label($"Tiempo:     {mins:F1} min");

@@ -152,21 +152,33 @@ public static class SaveSystem
     }
 
     //Elimina el archivo de guardado de un slot.
-    public static bool DeleteSave(int slot = 0)
+    public static bool DeleteSave(int slot = 0, bool quietIfMissing = false)
     {
         string path = GetSavePath(slot);
 
         if (!File.Exists(path))
         {
-            Debug.LogWarning($"[SaveSystem] No hay guardado que eliminar en slot {slot}");
+            if (!quietIfMissing)
+                Debug.LogWarning($"[SaveSystem] No hay guardado que eliminar en slot {slot}");
             return false;
         }
 
         try
         {
+            File.SetAttributes(path, FileAttributes.Normal);
             File.Delete(path);
             Debug.Log($"[SaveSystem] Slot {slot} eliminado.");
             return true;
+        }
+        catch (IOException e)
+        {
+            Debug.LogWarning($"[SaveSystem] No se pudo eliminar el slot {slot} porque el archivo esta abierto en otro programa. Cierra el JSON y vuelve a intentarlo: {e.Message}");
+            return false;
+        }
+        catch (UnauthorizedAccessException e)
+        {
+            Debug.LogWarning($"[SaveSystem] No se pudo eliminar el slot {slot} por permisos o bloqueo del archivo. Cierra el JSON y vuelve a intentarlo: {e.Message}");
+            return false;
         }
         catch (Exception e)
         {

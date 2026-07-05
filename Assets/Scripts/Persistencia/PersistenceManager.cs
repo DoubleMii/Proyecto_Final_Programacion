@@ -47,7 +47,7 @@ public class PersistenceManager : MonoBehaviour
     private void ClearAllSaveSlots()
     {
         for (int i = 0; i < 3; i++)
-            SaveSystem.DeleteSave(i);
+            SaveSystem.DeleteSave(i, true);
     }
 
     private void Update()
@@ -248,30 +248,6 @@ public class PersistenceManager : MonoBehaviour
 
         CurrentData.player.health = current;
         CurrentData.player.maxHealth = max;
-    }
-
-    public void AddItem(string itemName)
-    {
-        if (CurrentData == null) return;
-
-        CurrentData.player.inventory.Add(itemName);
-        CurrentData.stats.itemsCollected++;
-    }
-
-    public void RemoveItem(string itemName)
-    {
-        CurrentData?.player.inventory.Remove(itemName);
-    }
-
-    public bool HasItem(string itemName)
-    {
-        return CurrentData?.player.inventory.Contains(itemName) ?? false;
-    }
-
-    public void RegisterKill()
-    {
-        if (CurrentData != null)
-            CurrentData.stats.enemiesKilled++;
     }
 
     public void RegisterDeath()
