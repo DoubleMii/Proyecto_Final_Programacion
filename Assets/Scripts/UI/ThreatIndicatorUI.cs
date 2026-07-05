@@ -23,6 +23,7 @@ public class ThreatIndicatorUI : MonoBehaviour
     private void OnEnable()
     {
         EventManager.OnPlayerDetected += HandlePlayerDetected;
+        HandlePlayerDetected(EventManager.IsPlayerDetected);
     }
 
     private void OnDisable()

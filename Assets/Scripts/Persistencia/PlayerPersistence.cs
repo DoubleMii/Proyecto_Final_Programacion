@@ -150,7 +150,11 @@ public class PlayerPersistence : MonoBehaviour, IDataPersistence
         if (_audioSource == null || damageClip == null)
             return;
 
-        _audioSource.PlayOneShot(damageClip, damageVolume);
+        float sfxVolume = AudioManager.instance != null ? AudioManager.instance.SfxVolume : 1f;
+        if (sfxVolume <= 0.001f)
+            return;
+
+        _audioSource.PlayOneShot(damageClip, damageVolume * sfxVolume);
     }
 
     private void Update()

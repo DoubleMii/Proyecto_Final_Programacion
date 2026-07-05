@@ -11,6 +11,7 @@ public class AudioManager : MonoBehaviour, IDataPersistence
     private const string MasterVolumeKey = "GlobalMasterVolume";
     private const string MusicVolumeKey = "GlobalMusicVolume";
     private const string SfxVolumeKey = "GlobalSfxVolume";
+    private const string AudioSettingsVersionKey = "GlobalAudioSettingsV2";
 
     public AudioSource audioSource;
     public AudioSource sfxSource;
@@ -24,6 +25,8 @@ public class AudioManager : MonoBehaviour, IDataPersistence
     private float _masterVolume = 1f;
     private float _musicVolume = 0.8f;
     private float _sfxVolume = 1f;
+
+    public float SfxVolume => _sfxVolume;
 
 
     private void Awake()
@@ -100,7 +103,7 @@ public class AudioManager : MonoBehaviour, IDataPersistence
 
         source.pitch = Random.Range(0.92f, 1.08f);
 
-        source.PlayOneShot(clip);
+        source.PlayOneShot(clip, _sfxVolume);
     }
 
 
@@ -188,6 +191,10 @@ public class AudioManager : MonoBehaviour, IDataPersistence
             else if (sfxSlider == null && (sliderName.Contains("sfx") || sliderName.Contains("efecto"))) sfxSlider = slider;
         }
 
+        PrepareVolumeSlider(masterSlider);
+        PrepareVolumeSlider(musicSlider);
+        PrepareVolumeSlider(sfxSlider);
+
         if (musicSlider != null)
         {
             musicSlider.onValueChanged.RemoveListener(ChangeMusicVolume);
@@ -207,6 +214,15 @@ public class AudioManager : MonoBehaviour, IDataPersistence
         }
     }
 
+    private void PrepareVolumeSlider(Slider slider)
+    {
+        if (slider == null) return;
+
+        slider.wholeNumbers = false;
+        slider.minValue = 0f;
+        slider.maxValue = 1f;
+    }
+
     private void SyncSliderVisuals()
     {
         SetSliderFromNormalized(masterSlider, _masterVolume);
@@ -221,16 +237,6 @@ public class AudioManager : MonoBehaviour, IDataPersistence
 
     private float NormalizeVolumeForSlider(Slider slider, float volume)
     {
-        if (slider != null && slider.minValue < 0f && slider.maxValue <= 0f)
-        {
-            return Mathf.InverseLerp(slider.minValue, slider.maxValue, volume);
-        }
-
-        if (slider != null && slider.maxValue > 1f)
-        {
-            return Mathf.InverseLerp(slider.minValue, slider.maxValue, volume);
-        }
-
         return NormalizeSliderVolume(volume);
     }
 
@@ -239,15 +245,6 @@ public class AudioManager : MonoBehaviour, IDataPersistence
         if (slider == null) return;
 
         float value = Mathf.Clamp01(normalizedVolume);
-        if (slider.minValue < 0f && slider.maxValue <= 0f)
-        {
-            value = Mathf.Lerp(slider.minValue, slider.maxValue, value);
-        }
-        else if (slider.maxValue > 1f)
-        {
-            value = Mathf.Lerp(slider.minValue, slider.maxValue, value);
-        }
-
         slider.SetValueWithoutNotify(value);
     }
 
@@ -258,6 +255,16 @@ public class AudioManager : MonoBehaviour, IDataPersistence
 
     private void LoadGlobalAudioSettings()
     {
+        if (!PlayerPrefs.HasKey(AudioSettingsVersionKey))
+        {
+            _masterVolume = 1f;
+            _musicVolume = 0.8f;
+            _sfxVolume = 1f;
+            PlayerPrefs.SetInt(AudioSettingsVersionKey, 1);
+            SaveGlobalAudioSettings();
+            return;
+        }
+
         _masterVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(MasterVolumeKey, _masterVolume));
         _musicVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(MusicVolumeKey, _musicVolume));
         _sfxVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(SfxVolumeKey, _sfxVolume));

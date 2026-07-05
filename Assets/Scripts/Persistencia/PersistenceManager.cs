@@ -176,10 +176,14 @@ public class PersistenceManager : MonoBehaviour
     public void NewGame()
     {
         CurrentData = new GameData();
+        EventManager.ResetPlayerDetection();
 
         var targets = FindAllPersistenceObjects();
         foreach (var t in targets)
             t.LoadData(CurrentData);
+
+        ResetEnemiesToSpawn();
+        EventManager.ResetPlayerDetection();
 
         if (AudioManager.instance != null)
             AudioManager.instance.LoadData(CurrentData);
@@ -188,6 +192,17 @@ public class PersistenceManager : MonoBehaviour
         RestartMusic();
 
         Debug.Log("[PersistenceManager] Nueva partida iniciada.");
+    }
+
+    private void ResetEnemiesToSpawn()
+    {
+        NPCController[] enemies = FindObjectsByType<NPCController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        foreach (NPCController enemy in enemies)
+        {
+            if (enemy != null)
+                enemy.ResetToSpawnPosition();
+        }
     }
 
     private void RestartMusic()

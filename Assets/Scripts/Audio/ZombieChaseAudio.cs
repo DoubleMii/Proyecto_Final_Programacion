@@ -18,6 +18,13 @@ public class ZombieChaseAudio : MonoBehaviour
         FindController();
     }
 
+    private void OnEnable()
+    {
+        ConfigureSource();
+        FindController();
+        _timer = 0f;
+    }
+
     private void Update()
     {
         if (chaseClip == null)
@@ -39,7 +46,10 @@ public class ZombieChaseAudio : MonoBehaviour
         if (_timer > 0f)
             return;
 
-        _source.PlayOneShot(chaseClip, volume);
+        float sfxVolume = AudioManager.instance != null ? AudioManager.instance.SfxVolume : 1f;
+        if (sfxVolume > 0.001f)
+            _source.PlayOneShot(chaseClip, volume * sfxVolume);
+
         _timer = Mathf.Max(0.2f, repeatEverySeconds);
     }
 

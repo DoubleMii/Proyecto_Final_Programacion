@@ -80,7 +80,9 @@ public class RuntimeFootstepAudio : MonoBehaviour
         if (_stepClip == null || _source == null) return;
 
         _source.pitch = Random.Range(0.85f, 1.12f) + Mathf.InverseLerp(1f, 7f, speed) * 0.08f;
-        _source.PlayOneShot(_stepClip, Mathf.Clamp01(speed / 6f));
+        float sfxVolume = AudioManager.instance != null ? AudioManager.instance.SfxVolume : 1f;
+        if (sfxVolume > 0.001f)
+            _source.PlayOneShot(_stepClip, Mathf.Clamp01(speed / 6f) * sfxVolume);
 
         if (spawnDust && VFXManager.Instance != null)
             VFXManager.Instance.PlayDust(GetFootstepPosition());

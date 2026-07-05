@@ -44,12 +44,7 @@ public static class EventManager
 
     public static void ResetPlayerDetection()
     {
-        bool wasDetected = IsPlayerDetected;
         _playerDetectionCount = 0;
-
-        if (wasDetected)
-        {
-            OnPlayerDetected?.Invoke(false);
-        }
+        OnPlayerDetected?.Invoke(false);
     }
 }

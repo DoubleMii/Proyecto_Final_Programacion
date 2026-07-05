@@ -97,8 +97,13 @@ public class RuntimeAudioFeedback : MonoBehaviour
     private void Play(AudioClip clip, float volume)
     {
         if (_uiSource == null || clip == null) return;
+
+        float sfxVolume = AudioManager.instance != null ? AudioManager.instance.SfxVolume : 1f;
+        if (sfxVolume <= 0.001f)
+            return;
+
         _uiSource.pitch = 1f;
-        _uiSource.PlayOneShot(clip, volume);
+        _uiSource.PlayOneShot(clip, volume * sfxVolume);
     }
 
     private AudioClip CreateTone(string name, float frequency, float duration, float volume)
